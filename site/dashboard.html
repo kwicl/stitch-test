@@ -1,57 +1,36 @@
 <!DOCTYPE html>
-<!-- ✅ Smart Expenses — Connecté à Google Sheets -->
-
 <html class="dark" lang="fr">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Smart Expenses — Dashboard</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#a1e633",
-                        "background-light": "#f7f8f6",
-                        "background-dark": "#1b2111",
-                    },
-                    fontFamily: {
-                        "display": ["Inter"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
+            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" }, fontFamily: { "display": ["Inter"] } } }
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            min-height: 100dvh;
         }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
 
-        /* ── MODAL OVERLAY ──────────────────────── */
         #modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 999;
             backdrop-filter: blur(4px);
             align-items: flex-end;
@@ -60,16 +39,16 @@
 
         #modal-overlay.open {
             display: flex;
-            animation: fadeIn 0.2s ease;
+            animation: fadeIn .2s ease;
         }
 
         @keyframes fadeIn {
             from {
-                opacity: 0;
+                opacity: 0
             }
 
             to {
-                opacity: 1;
+                opacity: 1
             }
         }
 
@@ -79,17 +58,19 @@
             background: #1b2111;
             border-radius: 24px 24px 0 0;
             padding: 24px 20px 40px;
-            border-top: 1px solid rgba(161, 230, 51, 0.2);
-            animation: slideUp 0.3s ease;
+            border-top: 1px solid rgba(161, 230, 51, .25);
+            animation: slideUp .3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @keyframes slideUp {
             from {
-                transform: translateY(100%);
+                transform: translateY(100%)
             }
 
             to {
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
@@ -97,16 +78,16 @@
         #modal-box select,
         #modal-box textarea {
             width: 100%;
-            background: rgba(161, 230, 51, 0.05);
-            border: 1px solid rgba(161, 230, 51, 0.15);
+            background: rgba(161, 230, 51, .05);
+            border: 1px solid rgba(161, 230, 51, .15);
             border-radius: 10px;
             color: #f1f5f9;
-            padding: 11px 14px;
+            padding: 10px 13px;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             outline: none;
             margin-bottom: 10px;
-            transition: border-color 0.2s;
+            transition: border-color .2s;
         }
 
         #modal-box input:focus,
@@ -120,7 +101,6 @@
             color: #f1f5f9;
         }
 
-        /* ── TOAST NOTIFICATION ─────────────────── */
         #toast {
             position: fixed;
             bottom: 100px;
@@ -134,8 +114,9 @@
             font-weight: 700;
             z-index: 9999;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all .3s ease;
             white-space: nowrap;
+            pointer-events: none;
         }
 
         #toast.show {
@@ -147,319 +128,216 @@
             background: #ef4444;
             color: #fff;
         }
+
+        .skeleton {
+            background: linear-gradient(90deg, rgba(161, 230, 51, .04) 25%, rgba(161, 230, 51, .1) 50%, rgba(161, 230, 51, .04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .period-btn {
+            transition: all .2s;
+        }
+
+        .period-btn.active {
+            background: #a1e633 !important;
+            color: #1b2111 !important;
+            border-color: #a1e633 !important;
+            font-weight: 700;
+        }
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
-    <!-- Header / Nav -->
+<body class="bg-background-dark text-slate-100 min-h-screen flex flex-col">
+
+    <!-- HEADER -->
     <header
-        class="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-primary/10">
+        class="flex items-center justify-between p-4 border-b border-primary/10 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg">
         <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>
-            <h1 class="text-xl font-bold tracking-tight">Tableau de bord</h1>
+            <h1 class="text-xl font-bold tracking-tight">Smart Expenses</h1>
         </div>
-        <button class="p-2 rounded-full bg-slate-200 dark:bg-primary/10">
-            <span class="material-symbols-outlined">notifications</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10">
+                <span id="conn-dot"
+                    style="width:7px;height:7px;border-radius:50%;background:#64748b;display:inline-block;transition:background .4s;"></span>
+                <span id="conn-text" class="text-primary/70">Chargement…</span>
+            </div>
+            <button class="p-2 rounded-full bg-primary/10"><span
+                    class="material-symbols-outlined text-xl">notifications</span></button>
+        </div>
     </header>
-    <main class="flex-1 overflow-y-auto pb-24">
-        <!-- Balance Card -->
+
+    <main class="flex-1 overflow-y-auto pb-28">
+
+        <!-- BALANCE CARD -->
         <section class="p-4">
-            <div class="bg-primary/10 border border-primary/20 rounded-xl p-6 flex flex-col gap-1">
-                <p class="text-slate-500 dark:text-primary/70 text-sm font-medium uppercase tracking-wider">Solde total
-                </p>
-                <h2 class="text-4xl font-bold text-slate-900 dark:text-slate-100">$12,450.00</h2>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-primary flex items-center text-sm font-bold">
-                        <span class="material-symbols-outlined text-sm">trending_up</span> +2.4%
-                    </span>
-                    <span class="text-slate-500 text-sm">ce mois-ci</span>
+            <div class="bg-primary/10 border border-primary/20 rounded-2xl p-5">
+                <p class="text-primary/70 text-xs font-semibold uppercase tracking-widest mb-1">Solde disponible</p>
+                <h2 id="balance-total" class="text-4xl font-bold mb-3">— DH</h2>
+                <div class="flex gap-5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-primary" style="font-size:16px;">arrow_upward</span>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Revenus</p>
+                            <p id="stat-revenus" class="text-sm font-bold text-primary">0 DH</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-red-400"
+                            style="font-size:16px;">arrow_downward</span>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Dépenses</p>
+                            <p id="stat-depenses" class="text-sm font-bold text-red-400">0 DH</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-blue-400" style="font-size:16px;">savings</span>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase">Épargne</p>
+                            <p id="stat-epargne" class="text-sm font-bold text-blue-400">0 DH</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-        <!-- Period Selectors -->
-        <section class="px-4 py-2">
-            <div
-                class="flex h-11 items-center justify-center rounded-xl bg-slate-200 dark:bg-primary/5 p-1 border border-slate-300 dark:border-primary/10">
-                <label
-                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
-                    <span class="truncate">Jour</span>
-                    <input class="hidden" name="period" type="radio" value="Jour" />
-                </label>
-                <label
-                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
-                    <span class="truncate">Semaine</span>
-                    <input class="hidden" name="period" type="radio" value="Semaine" />
-                </label>
-                <label
-                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
-                    <span class="truncate">Mois</span>
-                    <input checked="" class="hidden" name="period" type="radio" value="Mois" />
-                </label>
-                <label
-                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
-                    <span class="truncate">Année</span>
-                    <input class="hidden" name="period" type="radio" value="Année" />
-                </label>
+
+        <!-- PERIOD FILTER -->
+        <section class="px-4 pb-3">
+            <div class="flex gap-2 mb-2">
+                <select id="period-dropdown" onchange="onDropdownChange()"
+                    class="flex-1 bg-primary/5 border border-primary/15 text-slate-100 text-sm rounded-xl px-3 py-2.5 outline-none">
+                    <option value="all">📅 Toutes les périodes</option>
+                </select>
+                <button onclick="selectAll()"
+                    class="shrink-0 px-4 py-2.5 bg-primary text-background-dark text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">Tout</button>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+                <button id="btn-jour" onclick="setPeriod('jour')"
+                    class="period-btn py-2 text-xs font-semibold rounded-xl border border-primary/15 bg-primary/5 text-slate-400">Jour</button>
+                <button id="btn-semaine" onclick="setPeriod('semaine')"
+                    class="period-btn py-2 text-xs font-semibold rounded-xl border border-primary/15 bg-primary/5 text-slate-400">Semaine</button>
+                <button id="btn-mois" onclick="setPeriod('mois')"
+                    class="period-btn py-2 text-xs font-semibold rounded-xl border border-primary/15 bg-primary/5 text-slate-400 active">Mois</button>
+                <button id="btn-annee" onclick="setPeriod('annee')"
+                    class="period-btn py-2 text-xs font-semibold rounded-xl border border-primary/15 bg-primary/5 text-slate-400">Année</button>
             </div>
         </section>
-        <!-- Cash Flow Chart Section -->
-        <section class="p-4">
-            <div class="bg-slate-50 dark:bg-primary/5 rounded-xl p-6 border border-slate-200 dark:border-primary/10">
-                <div class="flex justify-between items-start mb-6">
+
+        <!-- LINE CHART -->
+        <section class="px-4 pb-4">
+            <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                <div class="flex justify-between items-start mb-3">
                     <div>
-                        <p class="text-slate-500 dark:text-primary/70 text-sm font-medium">Flux de trésorerie</p>
-                        <p class="text-3xl font-bold">$4,200.00</p>
-                        <div class="flex items-center gap-1">
-                            <p class="text-slate-400 text-xs font-normal">Derniers 30 jours</p>
-                            <p class="text-primary text-xs font-bold">+12%</p>
-                        </div>
+                        <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest">Analyse</p>
+                        <p id="chart-period-label" class="text-sm font-bold">Ce mois-ci</p>
                     </div>
-                    <button onclick="openModal()"
-                        class="bg-primary text-background-dark p-2 rounded-lg font-bold hover:scale-110 transition-transform"
-                        title="Ajouter une transaction">
-                        <span class="material-symbols-outlined">add</span>
-                    </button>
-                </div>
-                <div class="flex min-h-[160px] flex-col gap-4">
-                    <svg fill="none" height="120" preserveaspectratio="none" viewbox="-3 0 478 150" width="100%"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z"
-                            fill="url(#paint0_linear)"></path>
-                        <path
-                            d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
-                            stroke="#a1e633" stroke-linecap="round" stroke-width="3"></path>
-                        <defs>
-                            <lineargradient gradientunits="userSpaceOnUse" id="paint0_linear" x1="236" x2="236" y1="1"
-                                y2="149">
-                                <stop stop-color="#a1e633" stop-opacity="0.3"></stop>
-                                <stop offset="1" stop-color="#a1e633" stop-opacity="0"></stop>
-                            </lineargradient>
-                        </defs>
-                    </svg>
-                    <div class="flex justify-between px-2">
-                        <p class="text-slate-400 text-xs font-bold">1</p>
-                        <p class="text-slate-400 text-xs font-bold">7</p>
-                        <p class="text-slate-400 text-xs font-bold">14</p>
-                        <p class="text-slate-400 text-xs font-bold">21</p>
-                        <p class="text-slate-400 text-xs font-bold">28</p>
+                    <div class="flex flex-col gap-1 items-end">
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-primary inline-block"></span><span
+                                class="text-[10px] text-slate-400">Revenus</span></div>
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-red-400 inline-block"></span><span
+                                class="text-[10px] text-slate-400">Dépenses</span></div>
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span><span
+                                class="text-[10px] text-slate-400">Épargne</span></div>
                     </div>
                 </div>
+                <div style="position:relative;height:180px;">
+                    <canvas id="cashflow-chart"></canvas>
+                </div>
+                <p id="chart-empty" class="hidden text-center py-8 text-slate-500 text-sm">Aucune donnée pour cette
+                    période</p>
             </div>
         </section>
-        <section class="p-4">
-            <div class="bg-slate-50 dark:bg-primary/5 rounded-xl p-6 border border-slate-200 dark:border-primary/10">
-                <div class="flex flex-col gap-6">
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <p
-                                class="text-slate-500 dark:text-primary/70 text-xs font-medium uppercase tracking-widest">
-                                Revenus mensuels</p>
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-3xl font-bold text-primary">$6,840.00</h3>
-                                <span class="flex items-center text-primary text-xs font-bold">
-                                    <span class="material-symbols-outlined text-sm">arrow_upward</span> 8%
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <p
-                                class="text-slate-500 dark:text-primary/70 text-xs font-medium uppercase tracking-widest text-right">
-                                Dépenses</p>
-                            <div class="flex items-center gap-2 justify-end">
-                                <h3 class="text-xl font-bold text-slate-400">$2,640.00</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-end gap-3 h-32">
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 60%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 40%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Jan</p>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 75%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 55%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fév</p>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative border-2 border-primary/40"
-                                style="height: 100%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 38%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-primary uppercase tracking-tighter">Mar</p>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 85%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 45%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Avr</p>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 65%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 30%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Mai</p>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 90%;">
-                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 50%;">
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Juin</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 pt-2 border-t border-slate-200 dark:border-primary/10">
-                        <div class="flex items-center gap-2">
-                            <div class="size-2 rounded-full bg-primary"></div>
-                            <span class="text-[10px] text-slate-500 uppercase font-semibold">Revenus</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="size-2 rounded-full bg-primary/20"></div>
-                            <span class="text-[10px] text-slate-500 uppercase font-semibold">Dépenses</span>
-                        </div>
-                    </div>
-                </div>
+
+        <!-- RECENT TRANSACTIONS -->
+        <section class="px-4 pb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold">Transactions récentes</h3>
+                <a href="transactions.html" class="text-xs text-primary font-semibold">Voir tout →</a>
             </div>
-        </section>
-        <!-- Categories List -->
-        <section class="px-4 pb-8">
-            <h3 class="text-lg font-bold mb-4">Dépenses par catégorie</h3>
-            <div class="flex flex-col gap-3">
-                <!-- Category Item -->
-                <div
-                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="size-10 flex items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
-                            <span class="material-symbols-outlined">restaurant</span>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Alimentation</p>
-                            <p class="text-xs text-slate-500">24 Transactions</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-slate-900 dark:text-slate-100">-$450.20</p>
-                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
-                            <div class="h-full bg-orange-500" style="width: 65%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Category Item -->
-                <div
-                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
-                    <div class="flex items-center gap-4">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-brown-500/20 text-amber-700">
-                            <span class="material-symbols-outlined">coffee</span>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Café</p>
-                            <p class="text-xs text-slate-500">12 Transactions</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-slate-900 dark:text-slate-100">-$85.00</p>
-                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
-                            <div class="h-full bg-amber-700" style="width: 20%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Category Item -->
-                <div
-                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
-                    <div class="flex items-center gap-4">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
-                            <span class="material-symbols-outlined">medical_services</span>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Santé</p>
-                            <p class="text-xs text-slate-500">3 Transactions</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-slate-900 dark:text-slate-100">-$120.50</p>
-                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
-                            <div class="h-full bg-blue-500" style="width: 35%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Category Item -->
-                <div
-                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="size-10 flex items-center justify-center rounded-lg bg-purple-500/20 text-purple-500">
-                            <span class="material-symbols-outlined">movie</span>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Loisirs</p>
-                            <p class="text-xs text-slate-500">8 Transactions</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-slate-900 dark:text-slate-100">-$210.00</p>
-                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
-                            <div class="h-full bg-purple-500" style="width: 45%;"></div>
-                        </div>
-                    </div>
-                </div>
+            <div id="tx-list" class="flex flex-col gap-2">
+                <div class="skeleton h-16 w-full"></div>
+                <div class="skeleton h-16 w-full"></div>
+                <div class="skeleton h-16 w-full"></div>
             </div>
+            <p id="tx-empty" class="hidden text-center py-8 text-slate-500 text-sm">Aucune transaction pour cette
+                période</p>
         </section>
+
     </main>
 
-    <!-- ══════════════════════════════════════════
-     MODAL — Ajouter une transaction
-══════════════════════════════════════════ -->
-    <div id="modal-overlay" onclick="handleOverlayClick(event)">
+    <!-- FAB -->
+    <button onclick="openModal()"
+        class="fixed bottom-24 right-5 size-14 rounded-full bg-primary text-background-dark shadow-xl flex items-center justify-center hover:scale-110 transition-transform z-20">
+        <span class="material-symbols-outlined text-3xl font-bold">add</span>
+    </button>
+
+    <!-- BOTTOM NAV -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 border-t border-primary/10 bg-background-dark/90 backdrop-blur-lg px-4 pb-6 pt-2 z-10">
+        <div class="flex gap-2 max-w-md mx-auto">
+            <a href="dashboard.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-primary">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">home</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Accueil</p>
+            </a>
+            <a href="transactions.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Portefeuille</p>
+            </a>
+            <a href="analyse.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Stats</p>
+            </a>
+            <a href="budgets.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">account_balance</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Budgets</p>
+            </a>
+        </div>
+    </nav>
+
+    <!-- MODAL -->
+    <div id="modal-overlay" onclick="overlayClick(event)">
         <div id="modal-box">
-            <!-- Titre -->
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="text-lg font-bold text-slate-100">➕ Nouvelle transaction</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold">➕ Nouvelle transaction</h2>
                 <button onclick="closeModal()"
                     class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-
-            <!-- Indicateur de statut Google Sheets -->
-            <div id="sheets-status" class="text-xs text-slate-400 mb-4 flex items-center gap-2">
-                <span id="status-dot"
-                    style="width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;"></span>
-                <span id="status-text">Vérification connexion Google Sheets...</span>
+            <div class="flex items-center gap-2 mb-4 text-xs text-slate-400">
+                <span id="modal-dot"
+                    style="width:8px;height:8px;border-radius:50%;background:#a1e633;display:inline-block;"></span>
+                <span id="modal-status">Connecté à Google Sheets</span>
             </div>
-
-            <!-- Formulaire -->
-            <form id="transaction-form" onsubmit="submitTransaction(event)">
-
-                <!-- Date -->
+            <form id="tx-form" onsubmit="submitTx(event)">
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📅 Date</label>
                 <input type="date" id="f-date" required />
-
-                <!-- Montant -->
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰
-                    Montant</label>
-                <input type="number" id="f-montant" placeholder="Ex: 25" step="0.01" min="0" required />
-
-                <!-- Type de mouvement (Income) -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰 Montant
+                    (DH)</label>
+                <input type="number" id="f-montant" placeholder="Ex: 150" step="0.01" min="0" required />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📌 Type</label>
                 <select id="f-income">
                     <option value="">— Dépense —</option>
                     <option value="Revenu">💚 Revenu / Income</option>
                     <option value="Investissement">📈 Investissement</option>
                 </select>
-
-                <!-- Catégorie -->
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️
                     Catégorie</label>
-                <select id="f-categorie" required>
-                    <option value="">Choisir une catégorie...</option>
+                <select id="f-categorie">
+                    <option value="">Choisir une catégorie…</option>
                     <option>Alimentation</option>
                     <option>Café</option>
                     <option>Transport</option>
@@ -475,10 +353,8 @@
                     <option>Loisirs</option>
                     <option>Autre</option>
                 </select>
-
-                <!-- Mode de paiement -->
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💳 Mode de
-                    paiement</label>
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💳
+                    Paiement</label>
                 <select id="f-paiement">
                     <option>Espèces</option>
                     <option>Virement</option>
@@ -486,20 +362,13 @@
                     <option>Chèque</option>
                     <option>Carte bancaire</option>
                 </select>
-
-                <!-- Lieu -->
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu
-                    (optionnel)</label>
-                <input type="text" id="f-lieu" placeholder="Ex: Marché central, Darty..." />
-
-                <!-- Description -->
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝 Description
-                    (optionnel)</label>
-                <textarea id="f-description" rows="2" placeholder="Notes supplémentaires..."></textarea>
-
-                <!-- Bouton Envoyer -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu</label>
+                <input type="text" id="f-lieu" placeholder="Ex: Marché central…" />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝
+                    Description</label>
+                <textarea id="f-desc" rows="2" placeholder="Notes…"></textarea>
                 <button type="submit" id="submit-btn"
-                    class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl text-sm mt-2 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl text-sm mt-1 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                     <span id="submit-icon">✅</span>
                     <span id="submit-label">Enregistrer dans Google Sheets</span>
                 </button>
@@ -507,139 +376,318 @@
         </div>
     </div>
 
-    <!-- Toast notification -->
+    <!-- TOAST -->
     <div id="toast"></div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav
-        class="fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-primary/10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg px-4 pb-6 pt-2">
-        <div class="flex gap-2 max-w-md mx-auto">
-            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-primary" href="#">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
-                <p class="text-[10px] font-bold uppercase tracking-widest">Accueil</p>
-            </a>
-            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
-                href="#">
-                <span class="material-symbols-outlined">account_balance_wallet</span>
-                <p class="text-[10px] font-bold uppercase tracking-widest">Portefeuille</p>
-            </a>
-            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
-                href="#">
-                <span class="material-symbols-outlined">bar_chart</span>
-                <p class="text-[10px] font-bold uppercase tracking-widest">Stats</p>
-            </a>
-            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
-                href="#">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] font-bold uppercase tracking-widest">Réglages</p>
-            </a>
-        </div>
-    </nav>
-
-    <!-- ══════════════════════════════════════════
-     JAVASCRIPT — Intégration Google Sheets
-══════════════════════════════════════════ -->
     <script>
-        // ╔══════════════════════════════════════════════════════════════╗
-        // ║  ⚠️  CONFIGURATION — REMPLACEZ PAR VOTRE URL APPS SCRIPT   ║
-        // ╚══════════════════════════════════════════════════════════════╝
+        // ═══════════════════════════════════════════════
+        // CONFIG — URL Apps Script
+        // ═══════════════════════════════════════════════
         const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
-        //
-        // Exemple :
-        // const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycby.../exec";
 
-        // ── OUVRIR / FERMER la modal ──────────────────────────────────
-        function openModal() {
-            document.getElementById("modal-overlay").classList.add("open");
-            // Mettre la date d'aujourd'hui par défaut
-            const today = new Date().toISOString().split("T")[0];
-            document.getElementById("f-date").value = today;
+        // ═══════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════
+        let allTx = [];
+        let period = 'mois';
+        let chart = null;
+
+        // ═══════════════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════════════
+        function parseDt(s) {
+            if (!s) return null;
+            const str = String(s).trim();
+            const m1 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m1) return new Date(+m1[3], +m1[2] - 1, +m1[1]);
+            const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (m2) return new Date(+m2[1], +m2[2] - 1, +m2[3]);
+            const d = new Date(str); return isNaN(d) ? null : d;
         }
 
-        function closeModal() {
-            document.getElementById("modal-overlay").classList.remove("open");
-            document.getElementById("transaction-form").reset();
+        function fmtDH(v) {
+            return new Intl.NumberFormat('fr-MA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(v)) + ' DH';
         }
 
-        function handleOverlayClick(e) {
-            if (e.target === document.getElementById("modal-overlay")) closeModal();
-        }
+        function isRev(t) { return t.income && String(t.income).trim() !== ''; }
 
-        // ── AFFICHER un toast ─────────────────────────────────────────
-        function showToast(message, isError = false) {
-            const toast = document.getElementById("toast");
-            toast.textContent = message;
-            toast.className = "show" + (isError ? " error" : "");
-            setTimeout(() => { toast.className = ""; }, 3500);
-        }
-
-        // ── ENVOYER une transaction à Google Sheets ───────────────────
-        async function submitTransaction(event) {
-            event.preventDefault();
-
-            // Vérifier que l'URL est configurée
-            if (SHEETS_API_URL === "COLLEZ_VOTRE_URL_APPS_SCRIPT_ICI") {
-                showToast("⚠️ Configurez d'abord SHEETS_API_URL dans le code !", true);
-                return;
+        function getFiltered() {
+            const now = new Date();
+            if (period === 'all') return allTx;
+            if (period.startsWith('month:')) {
+                const [y, m] = period.slice(6).split('-').map(Number);
+                return allTx.filter(t => { const d = parseDt(t.date); return d && d.getFullYear() === y && d.getMonth() === m - 1; });
             }
+            let start;
+            if (period === 'jour') { start = new Date(now); start.setHours(0, 0, 0, 0); }
+            if (period === 'semaine') { start = new Date(now); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - start.getDay()); }
+            if (period === 'mois') { start = new Date(now.getFullYear(), now.getMonth(), 1); }
+            if (period === 'annee') { start = new Date(now.getFullYear(), 0, 1); }
+            return allTx.filter(t => { const d = parseDt(t.date); return d && d >= start && d <= now; });
+        }
 
-            // Récupérer les valeurs du formulaire
-            const transaction = {
-                action: "addTransaction",
-                date: document.getElementById("f-date").value,
-                montant: parseFloat(document.getElementById("f-montant").value),
-                income: document.getElementById("f-income").value,
-                categorie: document.getElementById("f-categorie").value,
-                paiement: document.getElementById("f-paiement").value,
-                lieu: document.getElementById("f-lieu").value,
-                description: document.getElementById("f-description").value
+        // ═══════════════════════════════════════════════
+        // STATS
+        // ═══════════════════════════════════════════════
+        function updateStats(tx) {
+            let rev = 0, dep = 0;
+            tx.forEach(t => { const a = parseFloat(t.montant) || 0; isRev(t) ? rev += a : dep += a; });
+            const ep = rev - dep;
+            document.getElementById('balance-total').textContent = fmtDH(ep);
+            document.getElementById('stat-revenus').textContent = fmtDH(rev);
+            document.getElementById('stat-depenses').textContent = fmtDH(dep);
+            document.getElementById('stat-epargne').textContent = fmtDH(ep);
+        }
+
+        // ═══════════════════════════════════════════════
+        // CHART
+        // ═══════════════════════════════════════════════
+        function updateChart(tx) {
+            const canvas = document.getElementById('cashflow-chart');
+            const empty = document.getElementById('chart-empty');
+            if (!tx.length) {
+                canvas.style.display = 'none'; empty.classList.remove('hidden');
+                if (chart) { chart.destroy(); chart = null; } return;
+            }
+            canvas.style.display = 'block'; empty.classList.add('hidden');
+
+            const byDate = {};
+            tx.forEach(t => {
+                const d = parseDt(t.date); if (!d) return;
+                const k = d.toISOString().slice(0, 10);
+                if (!byDate[k]) byDate[k] = { rev: 0, dep: 0 };
+                const a = parseFloat(t.montant) || 0;
+                isRev(t) ? byDate[k].rev += a : byDate[k].dep += a;
+            });
+
+            const keys = Object.keys(byDate).sort();
+            const labels = keys.map(k => new Date(k).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }));
+            const revData = keys.map(k => byDate[k].rev);
+            const depData = keys.map(k => byDate[k].dep);
+            let cum = 0;
+            const epData = keys.map(k => { cum += byDate[k].rev - byDate[k].dep; return cum; });
+
+            const pr = keys.length <= 15 ? 4 : 1;
+            if (chart) chart.destroy();
+            chart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels, datasets: [
+                        { label: 'Revenus', data: revData, borderColor: '#a1e633', backgroundColor: 'rgba(161,230,51,.1)', fill: true, tension: .4, pointRadius: pr, borderWidth: 2 },
+                        { label: 'Dépenses', data: depData, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,.08)', fill: true, tension: .4, pointRadius: pr, borderWidth: 2 },
+                        { label: 'Épargne', data: epData, borderColor: '#60a5fa', backgroundColor: 'transparent', fill: false, tension: .4, pointRadius: pr - 1, borderWidth: 2, borderDash: [5, 3] }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtDH(c.parsed.y)}` } } },
+                    scales: {
+                        x: { ticks: { color: '#64748b', font: { size: 9 }, maxRotation: 45 }, grid: { color: 'rgba(161,230,51,.05)' } },
+                        y: { ticks: { color: '#64748b', font: { size: 9 }, callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v }, grid: { color: 'rgba(161,230,51,.05)' } }
+                    }
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════
+        // TRANSACTION LIST
+        // ═══════════════════════════════════════════════
+        const ICONS = {
+            alimentation: { i: 'restaurant', c: 'bg-orange-500/20 text-orange-400' },
+            café: { i: 'coffee', c: 'bg-amber-700/20 text-amber-500' },
+            transport: { i: 'directions_car', c: 'bg-purple-500/20 text-purple-400' },
+            déplacement: { i: 'directions_car', c: 'bg-purple-500/20 text-purple-400' },
+            santé: { i: 'medical_services', c: 'bg-blue-500/20 text-blue-400' },
+            voyages: { i: 'flight', c: 'bg-sky-500/20 text-sky-400' },
+            'bien-être': { i: 'spa', c: 'bg-pink-500/20 text-pink-400' },
+            maison: { i: 'home', c: 'bg-red-500/20 text-red-400' },
+            électroménagers: { i: 'tv_gen', c: 'bg-gray-500/20 text-gray-400' },
+            éducation: { i: 'school', c: 'bg-indigo-500/20 text-indigo-400' },
+            appartement: { i: 'apartment', c: 'bg-red-500/20 text-red-400' },
+            investissement: { i: 'trending_up', c: 'bg-green-500/20 text-green-400' },
+            loisirs: { i: 'movie', c: 'bg-violet-500/20 text-violet-400' },
+            revenu: { i: 'payments', c: 'bg-primary/20 text-primary' },
+        };
+
+        function getIcon(t) {
+            if (isRev(t)) return ICONS.revenu;
+            const cat = String(t.categorie || '').toLowerCase();
+            for (const k in ICONS) { if (cat.includes(k)) return ICONS[k]; }
+            return { i: 'receipt_long', c: 'bg-slate-500/20 text-slate-400' };
+        }
+
+        function updateTxList(tx) {
+            const list = document.getElementById('tx-list');
+            const empty = document.getElementById('tx-empty');
+            const sorted = [...tx].sort((a, b) => { const da = parseDt(a.date), db = parseDt(b.date); return (db || 0) - (da || 0); });
+            const recent = sorted.slice(0, 10);
+            if (!recent.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+            empty.classList.add('hidden');
+            list.innerHTML = recent.map(t => {
+                const s = getIcon(t);
+                const income = isRev(t);
+                const amount = parseFloat(t.montant) || 0;
+                const label = income ? (String(t.income).slice(0, 22) || 'Revenu') : (t.categorie || 'Transaction');
+                const sub = t.lieu || t.description || (income ? 'Revenu' : 'Dépense');
+                const d = parseDt(t.date);
+                const ds = d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : String(t.date);
+                return `<div class="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl">
+      <div class="size-11 flex-shrink-0 flex items-center justify-center rounded-xl ${s.c}">
+        <span class="material-symbols-outlined" style="font-size:20px;">${s.i}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm truncate">${label}</p>
+        <p class="text-xs text-slate-400 truncate">${sub}</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="font-bold text-sm ${income ? 'text-primary' : 'text-slate-100'}">${income ? '+' : '-'}${fmtDH(amount)}</p>
+        <p class="text-[10px] text-slate-400">${ds}</p>
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        // ═══════════════════════════════════════════════
+        // PERIOD DROPDOWN
+        // ═══════════════════════════════════════════════
+        function buildDropdown() {
+            const months = {};
+            allTx.forEach(t => {
+                const d = parseDt(t.date); if (!d) return;
+                const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                months[k] = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            });
+            const sel = document.getElementById('period-dropdown');
+            const opts = Object.entries(months).sort((a, b) => b[0].localeCompare(a[0]))
+                .map(([k, v]) => `<option value="month:${k}">${v}</option>`).join('');
+            sel.innerHTML = `<option value="all">📅 Toutes les périodes</option>${opts}`;
+        }
+
+        // ═══════════════════════════════════════════════
+        // REFRESH
+        // ═══════════════════════════════════════════════
+        function refresh() {
+            const tx = getFiltered();
+            updateStats(tx);
+            updateChart(tx);
+            updateTxList(tx);
+        }
+
+        function setPeriod(p) {
+            period = p;
+            ['jour', 'semaine', 'mois', 'annee'].forEach(x => {
+                document.getElementById('btn-' + x).classList.toggle('active', x === p);
+            });
+            document.getElementById('period-dropdown').value = 'all';
+            const titles = { jour: "Aujourd'hui", semaine: 'Cette semaine', mois: 'Ce mois-ci', annee: 'Cette année' };
+            document.getElementById('chart-period-label').textContent = titles[p] || '';
+            refresh();
+        }
+
+        function onDropdownChange() {
+            const v = document.getElementById('period-dropdown').value;
+            period = v;
+            ['jour', 'semaine', 'mois', 'annee'].forEach(x => document.getElementById('btn-' + x).classList.remove('active'));
+            if (v === 'all') {
+                document.getElementById('chart-period-label').textContent = 'Toutes les périodes';
+            } else {
+                const sel = document.getElementById('period-dropdown');
+                document.getElementById('chart-period-label').textContent = sel.options[sel.selectedIndex]?.text || '';
+            }
+            refresh();
+        }
+
+        function selectAll() {
+            period = 'all';
+            ['jour', 'semaine', 'mois', 'annee'].forEach(x => document.getElementById('btn-' + x).classList.remove('active'));
+            document.getElementById('period-dropdown').value = 'all';
+            document.getElementById('chart-period-label').textContent = 'Toutes les périodes';
+            refresh();
+        }
+
+        // ═══════════════════════════════════════════════
+        // LOAD DATA FROM GOOGLE SHEETS
+        // ═══════════════════════════════════════════════
+        async function loadData() {
+            try {
+                const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
+                const data = await res.json();
+                if (data.success && Array.isArray(data.data)) {
+                    allTx = data.data;
+                    document.getElementById('conn-dot').style.background = '#a1e633';
+                    document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
+                    buildDropdown();
+                    setPeriod('mois');
+                } else { throw new Error(data.error || 'Erreur'); }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('conn-dot').style.background = '#f87171';
+                document.getElementById('conn-text').textContent = '⚠️ Hors ligne';
+                document.getElementById('tx-list').innerHTML = '';
+                document.getElementById('tx-empty').classList.remove('hidden');
+                updateStats([]); updateChart([]);
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        // MODAL
+        // ═══════════════════════════════════════════════
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('open');
+            document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+        }
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+            document.getElementById('tx-form').reset();
+        }
+        function overlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+        async function submitTx(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn'), icon = document.getElementById('submit-icon'), lbl = document.getElementById('submit-label');
+            btn.disabled = true; icon.textContent = '⏳'; lbl.textContent = 'Envoi en cours…';
+
+            const tx = {
+                action: 'addTransaction',
+                date: document.getElementById('f-date').value,
+                montant: parseFloat(document.getElementById('f-montant').value),
+                income: document.getElementById('f-income').value,
+                categorie: document.getElementById('f-categorie').value,
+                paiement: document.getElementById('f-paiement').value,
+                lieu: document.getElementById('f-lieu').value,
+                description: document.getElementById('f-desc').value
             };
 
-            // Afficher un spinner
-            const btn = document.getElementById("submit-btn");
-            const icon = document.getElementById("submit-icon");
-            const label = document.getElementById("submit-label");
-            btn.disabled = true;
-            icon.textContent = "⏳";
-            label.textContent = "Envoi en cours...";
-
             try {
-                // Envoyer vers Google Sheets (mode no-cors pour éviter les erreurs CORS)
-                await fetch(SHEETS_API_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(transaction)
-                });
-
-                // Succès !
-                showToast("✅ Transaction ajoutée dans Google Sheets !");
+                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(tx) });
+                showToast('✅ Transaction ajoutée dans Google Sheets !');
                 closeModal();
-
+                // Add locally for instant feedback
+                allTx.push({ ...tx, id: Date.now().toString() });
+                buildDropdown();
+                refresh();
             } catch (err) {
-                console.error("Erreur:", err);
-                showToast("❌ Erreur réseau. Vérifiez votre connexion.", true);
+                showToast('❌ Erreur réseau. Réessayez.', true);
             } finally {
-                // Remettre le bouton en état normal
-                btn.disabled = false;
-                icon.textContent = "✅";
-                label.textContent = "Enregistrer dans Google Sheets";
+                btn.disabled = false; icon.textContent = '✅'; lbl.textContent = 'Enregistrer dans Google Sheets';
             }
         }
 
-        // ── VÉRIFIER la connexion au démarrage ────────────────────────
-        window.addEventListener("DOMContentLoaded", function () {
-            const dot = document.getElementById("status-dot");
-            const text = document.getElementById("status-text");
+        // ═══════════════════════════════════════════════
+        // TOAST
+        // ═══════════════════════════════════════════════
+        function showToast(msg, err = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'show' + (err ? ' error' : '');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.className = '', 3500);
+        }
 
-            if (SHEETS_API_URL === "COLLEZ_VOTRE_URL_APPS_SCRIPT_ICI") {
-                dot.style.background = "#f59e0b";
-                text.textContent = "⚠️ URL Apps Script non configurée";
-            } else {
-                dot.style.background = "#a1e633";
-                text.textContent = "✅ Connecté à Google Sheets";
-            }
-        });
+        // ═══════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════
+        window.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 
