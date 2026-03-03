@@ -99,19 +99,39 @@
             return new Intl.NumberFormat('fr-MA').format(Math.round(v)) + ' DH';
         }
 
+        function getVal(t) {
+            const m = cleanAmount(t.montant);
+            const i = cleanAmount(t.income);
+            return m || i || 0;
+        }
+
         function isRev(t) {
-            return t.income && String(t.income).trim() !== "" && String(t.income).trim().toLowerCase() !== "false";
+            const incomeVal = String(t.income || "").trim().toLowerCase();
+            return incomeVal !== "" && incomeVal !== "false" && incomeVal !== "0";
         }
 
         function parseDt(s) {
             if (!s) return null;
             let str = String(s).trim();
+            if (s instanceof Date) return s;
+            if (str.includes('Date(')) {
+                const m = str.match(/\d+/g);
+                if (m) return new Date(m[0], m[1], m[2]);
+            }
             const parts = str.split(/[/\- ]/);
             if (parts.length >= 3) {
-                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
-                return new Date(parts[2], parts[1] - 1, parts[0]);
+                if (parts[0].length === 2 || (parts[0].length === 1 && parts[2].length === 4)) {
+                    const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                } else if (parts[0].length === 4) {
+                    const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                }
             }
-            return new Date(str);
+            let d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         async function loadData() {
@@ -141,7 +161,7 @@
 
                 if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
                     const c = t.categorie || 'Autre';
-                    const a = cleanAmount(t.montant);
+                    const a = getVal(t);
                     cats[c] = (cats[c] || 0) + a;
                     totalSpentMonth += a;
                 }

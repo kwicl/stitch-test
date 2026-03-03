@@ -405,28 +405,47 @@
             return parseFloat(s) || 0;
         }
 
-        // Parsing de date ultra-robuste (Gère JJ/MM/AAAA, AAAA-MM-JJ et formats Google)
+        // Parsing de date ultra-robuste
         function parseDt(s) {
             if (!s) return null;
             let str = String(s).trim();
 
-            // Format Date(2025,10,22) de Google
+            // 1. Gérer explicitement le format ISO ou date string native
+            // Si c'est déjà un objet Date (peu probable via JSON mais bon)
+            if (s instanceof Date) return s;
+
+            // 2. Format Date(2025,10,22) de Google
             if (str.includes('Date(')) {
                 const m = str.match(/\d+/g);
                 if (m) return new Date(m[0], m[1], m[2]);
             }
 
-            // Format JJ/MM/AAAA ou JJ-MM-AAAA
+            // 3. Format JJ/MM/AAAA ou JJ-MM-AAAA (Très fréquent dans Sheets)
+            // On vérifie si le premier bloc est un jour (1-31) et non une année (20xx)
             const parts = str.split(/[/\- ]/);
             if (parts.length >= 3) {
-                // Si le premier bloc fait 4 chiffres, c'est AAAA-MM-JJ
-                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
-                // Sinon on considère JJ/MM/AAAA (très commun en France/Maroc)
-                return new Date(parts[2], parts[1] - 1, parts[0]);
+                if (parts[0].length === 2 || (parts[0].length === 1 && parts[2].length === 4)) {
+                    // Format DD/MM/YYYY
+                    const d = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10) - 1;
+                    const y = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                } else if (parts[0].length === 4) {
+                    // Format YYYY-MM-DD
+                    const y = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10) - 1;
+                    const d = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                }
             }
 
-            const d = new Date(str);
-            return isNaN(d) ? null : d;
+            // 4. Fallback natif
+            let d = new Date(str);
+            if (!isNaN(d.getTime())) return d;
+
+            return null;
         }
 
         function fmtDH(v) {
@@ -434,8 +453,25 @@
         }
 
         function isRev(t) {
-            // Une transaction est un revenu si la colonne D (Income) contient du texte
-            return t.income && String(t.income).trim() !== "" && String(t.income).trim().toLowerCase() !== "false";
+            const incomeVal = String(t.income || "").trim().toLowerCase();
+            return incomeVal !== "" && incomeVal !== "false" && incomeVal !== "0";
+        }
+
+        function getVal(t) {
+            const m = cleanAmount(t.montant);
+            const i = cleanAmount(t.income);
+            // Retourne le montant principal, sinon la valeur dans la colonne income
+            return m || i || 0;
+        }
+
+        function getLabel(t) {
+            if (isRev(t)) {
+                const inc = String(t.income || "").trim();
+                // Si la colonne income contient un nombre (le montant), on utilise le libellé générique "Revenu"
+                if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
+                return inc || "Revenu";
+            }
+            return t.categorie || "Dépense";
         }
 
         function getFiltered() {
@@ -476,7 +512,7 @@
         function updateStats(tx) {
             let rev = 0, dep = 0;
             tx.forEach(t => {
-                const a = cleanAmount(t.montant);
+                const a = getVal(t);
                 if (isRev(t)) rev += a;
                 else dep += a;
             });
@@ -504,7 +540,7 @@
                 const d = parseDt(t.date); if (!d) return;
                 const k = d.toISOString().slice(0, 10);
                 if (!byDate[k]) byDate[k] = { rev: 0, dep: 0 };
-                const a = cleanAmount(t.montant);
+                const a = getVal(t);
                 if (isRev(t)) byDate[k].rev += a;
                 else byDate[k].dep += a;
             });
@@ -568,21 +604,21 @@
         function updateTxList(tx) {
             const list = document.getElementById('tx-list');
             const empty = document.getElementById('tx-empty');
-            // Tri par date réel pour les 10 plus récents
-            const sorted = [...allTx].sort((a, b) => {
+            // Tri par date décroissant (plus récent en premier)
+            const sorted = [...tx].sort((a, b) => {
                 const da = parseDt(a.date), db = parseDt(b.date);
                 return (db || 0) - (da || 0);
             });
-            const recent = sorted.slice(0, 10);
+            const recent = sorted.slice(0, 15);
 
             if (!recent.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
             empty.classList.add('hidden');
             list.innerHTML = recent.map(t => {
                 const s = getIcon(t);
                 const income = isRev(t);
-                const amount = cleanAmount(t.montant);
-                const label = income ? (String(t.income).slice(0, 22) || 'Revenu') : (t.categorie || 'Transaction');
-                const sub = t.lieu || t.description || (income ? 'Revenu' : 'Dépense');
+                const amount = getVal(t);
+                const label = getLabel(t);
+                const sub = t.lieu || t.description || (income ? 'Entrée' : 'Sortie');
                 const d = parseDt(t.date);
                 const ds = d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : String(t.date);
                 return `<div class="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl">
@@ -671,7 +707,19 @@
                     document.getElementById('conn-dot').style.background = '#a1e633';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
                     buildDropdown();
-                    setPeriod('mois');
+
+                    // Détection intelligente : si le mois en cours est vide, on affiche tout
+                    const now = new Date();
+                    const currentMonthTx = allTx.filter(t => {
+                        const d = parseDt(t.date);
+                        return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+
+                    if (currentMonthTx.length === 0 && allTx.length > 0) {
+                        selectAll();
+                    } else {
+                        setPeriod('mois');
+                    }
                 } else { throw new Error(data.error || 'Erreur'); }
             } catch (e) {
                 console.error(e);

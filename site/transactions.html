@@ -91,31 +91,60 @@
         let allTx = [];
         let currentFilter = 'all';
 
-        // Formattage robuste des montants
+        // Parsing de date ultra-robuste
+        function parseDt(s) {
+            if (!s) return null;
+            let str = String(s).trim();
+            if (s instanceof Date) return s;
+            if (str.includes('Date(')) {
+                const m = str.match(/\d+/g);
+                if (m) return new Date(m[0], m[1], m[2]);
+            }
+            const parts = str.split(/[/\- ]/);
+            if (parts.length >= 3) {
+                if (parts[0].length === 2 || (parts[0].length === 1 && parts[2].length === 4)) {
+                    const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                } else if (parts[0].length === 4) {
+                    const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (!isNaN(dt.getTime())) return dt;
+                }
+            }
+            let d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function isRev(t) {
+            const incomeVal = String(t.income || "").trim().toLowerCase();
+            return incomeVal !== "" && incomeVal !== "false" && incomeVal !== "0";
+        }
+
         function cleanAmount(v) {
             if (typeof v === 'number') return v;
             if (!v) return 0;
-            return parseFloat(String(v).replace(/[^\d.-]/g, '')) || 0;
+            let s = String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+            return parseFloat(s) || 0;
         }
 
         function fmtDH(v) {
             return new Intl.NumberFormat('fr-MA').format(Math.round(v)) + ' DH';
         }
 
-        function isRev(t) {
-            return t.income && String(t.income).trim() !== '';
+        function getVal(t) {
+            const m = cleanAmount(t.montant);
+            const i = cleanAmount(t.income);
+            return m || i || 0;
         }
 
-        // Parsing de date ultra-robuste
-        function parseDt(s) {
-            if (!s) return null;
-            const str = String(s).trim();
-            const parts = str.split(/[/\- ]/);
-            if (parts.length >= 3) {
-                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]); // YYYY-MM-DD
-                return new Date(parts[2], parts[1] - 1, parts[0]); // DD/MM/YYYY
+        function getLabel(t) {
+            if (isRev(t)) {
+                const inc = String(t.income || "").trim();
+                if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
+                return inc || "Revenu";
             }
-            return new Date(str);
+            return t.categorie || "Dépense";
         }
 
         async function loadHistory() {
@@ -148,12 +177,15 @@
             const container = document.getElementById('history-list');
             const empty = document.getElementById('empty-state');
 
-            let filtered = allTx;
+            let filtered = [...allTx];
             if (currentFilter === 'rev') filtered = allTx.filter(isRev);
             if (currentFilter === 'dep') filtered = allTx.filter(t => !isRev(t));
 
             // Tri par date (plus récent en haut)
-            filtered.sort((a, b) => (parseDt(b.date) || 0) - (parseDt(a.date) || 0));
+            filtered.sort((a, b) => {
+                const da = parseDt(a.date), db = parseDt(b.date);
+                return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+            });
 
             if (filtered.length === 0) {
                 container.innerHTML = '';
@@ -164,10 +196,10 @@
             empty.classList.add('hidden');
             container.innerHTML = filtered.map(t => {
                 const revenue = isRev(t);
-                const amount = cleanAmount(t.montant);
+                const amount = getVal(t);
                 const date = parseDt(t.date);
-                const dateStr = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' }) : t.date;
-                const cat = revenue ? (t.income || 'Revenu') : (t.categorie || 'Dépense');
+                const dateStr = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : String(t.date || '');
+                const cat = getLabel(t);
                 const lieu = t.lieu || t.description || (revenue ? 'Entrée' : 'Sortie');
 
                 return `
