@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Principal — Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f14;
+      --surface: #1a1a24;
+      --surface2: #22222e;
+      --accent: #2ecc70;
+      --accent2: #27ae60;
+      --text: #f0f0f8;
+      --muted: #8888aa;
+      --border: #2a2a3a;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    header h1 { font-size: 16px; font-weight: 600; flex: 1; }
+    header .badge {
+      font-size: 11px;
+      background: var(--accent2);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
+
+    /* ── SCREEN TABS ────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .2s ease;
+      text-decoration: none;
+    }
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .tab .icon { font-size: 15px; }
+
+    /* ── MAIN LAYOUT ────────────────────────────── */
+    .content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 32px 24px;
+      background: var(--bg);
+    }
+
+    /* ── PHONE FRAME ────────────────────────────── */
+    .phone-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      background: #111118;
+      box-shadow:
+        0 0 0 10px #1a1a24,
+        0 0 0 12px #2a2a3a,
+        0 40px 80px rgba(0,0,0,.6),
+        0 0 60px rgba(46,204,112,.08);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #333;
+    }
+
+    /* Notch */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #111118;
+      border-radius: 0 0 22px 22px;
+      z-index: 10;
+    }
+
+    .phone-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 44px;
+      overflow: hidden;
+    }
+
+    /* ── CONTROLS UNDER PHONE ───────────────────── */
+    .phone-controls {
+      display: flex;
+      gap: 10px;
+    }
+    .ctrl-btn {
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ctrl-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── INFO PANEL ─────────────────────────────── */
+    .info-panel {
+      margin-top: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      width: 390px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .info-item { display: flex; flex-direction: column; gap: 2px; }
+    .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .info-value { font-size: 13px; font-weight: 600; color: var(--text); }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 5px; }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">💰</div>
+    <h1>Dashboard Principal</h1>
+    <span class="badge">📱 Mobile</span>
+  </header>
+
+  <nav class="tabs">
+    <a class="tab active" href="#" onclick="loadScreen('dashboard', this)" id="tab-dashboard">
+      <span class="icon">🏠</span> Dashboard
+    </a>
+    <a class="tab" href="#" onclick="loadScreen('budgets', this)" id="tab-budgets">
+      <span class="icon">🎯</span> Budgets
+    </a>
+    <a class="tab" href="#" onclick="loadScreen('analyse', this)" id="tab-analyse">
+      <span class="icon">📊</span> Analyse
+    </a>
+    <a class="tab" href="#" onclick="loadScreen('transactions', this)" id="tab-transactions">
+      <span class="icon">💳</span> Transactions
+    </a>
+  </nav>
+
+  <div class="content">
+    <div class="phone-wrapper">
+
+      <div class="phone-frame">
+        <iframe id="preview-frame" src="dashboard.html" title="Aperçu mobile"></iframe>
+      </div>
+
+      <div class="phone-controls">
+        <button class="ctrl-btn" onclick="document.getElementById('preview-frame').src = document.getElementById('preview-frame').src">
+          🔄 Recharger
+        </button>
+        <button class="ctrl-btn" onclick="openInNewTab()">
+          🔗 Plein écran
+        </button>
+        <button class="ctrl-btn" onclick="toggleScroll()">
+          📜 Scroll ON/OFF
+        </button>
+      </div>
+
+      <div class="info-panel" id="info-panel">
+        <div class="info-item">
+          <span class="info-label">Écran actif</span>
+          <span class="info-value" id="info-screen">Dashboard</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Dimensions</span>
+          <span class="info-value">390 × 844 px</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Projet Stitch</span>
+          <span class="info-value"><a href="https://stitch.withgoogle.com/projects/4105782733511474357" target="_blank" style="color:var(--accent)">4105782733511474357</a></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Statut</span>
+          <span class="info-value"><span class="dot"></span>En ligne</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    Antigravity × Stitch — Serveur local &nbsp;|&nbsp;
+    <a href="https://stitch.withgoogle.com/projects/4105782733511474357" target="_blank">Ouvrir dans Stitch ↗</a>
+  </footer>
+
+  <script>
+    const screens = {
+      dashboard:    { file: 'dashboard.html',    label: 'Dashboard Sombre' },
+      budgets:      { file: 'budgets.html',       label: 'Budgets Sombres' },
+      analyse:      { file: 'analyse.html',       label: 'Analyse Sombre' },
+      transactions: { file: 'transactions.html',  label: 'Transactions Sombres' },
+    };
+
+    let currentFile = 'dashboard.html';
+
+    function loadScreen(key, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const s = screens[key];
+      document.getElementById('preview-frame').src = s.file;
+      document.getElementById('info-screen').textContent = s.label;
+      currentFile = s.file;
+      return false;
+    }
+
+    function openInNewTab() {
+      window.open(currentFile, '_blank');
+    }
+
+    let scrollEnabled = true;
+    function toggleScroll() {
+      const frame = document.getElementById('preview-frame');
+      scrollEnabled = !scrollEnabled;
+      frame.style.overflow = scrollEnabled ? 'auto' : 'hidden';
+    }
+  </script>
+
+</body>
+</html>

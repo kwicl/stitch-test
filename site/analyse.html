@@ -1,0 +1,179 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#a1e633",
+                        "background-light": "#f7f8f6",
+                        "background-dark": "#1b2111",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Header -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+<div class="text-slate-900 dark:text-slate-100 flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined">arrow_back</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Analyse v3</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-slate-900 dark:text-slate-100 p-0">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-6 p-4">
+<!-- Financial Health Score Card -->
+<div class="@container">
+<div class="flex flex-col items-stretch justify-start rounded-xl @xl:flex-row @xl:items-start shadow-lg bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover bg-gradient-to-br from-primary/40 to-primary/10" data-alt="Abstract lime green glowing geometric pattern"></div>
+<div class="flex w-full min-w-72 grow flex-col items-stretch justify-center gap-1 py-4 @xl:px-6 px-4">
+<p class="text-slate-500 dark:text-primary/70 text-sm font-medium uppercase tracking-wider">Score Global</p>
+<p class="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">Santé Financière 92/100</p>
+<div class="flex items-center gap-3 justify-between mt-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<p class="text-slate-600 dark:text-primary text-base font-semibold leading-normal">Excellent</p>
+</div>
+<button class="flex min-w-[100px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-9 px-4 bg-primary text-background-dark text-sm font-bold leading-normal transition-colors hover:bg-primary/90">
+<span class="truncate">Détails</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Cash Flow Section -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Flux de trésorerie</p>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight truncate">+2,450.00 €</p>
+<span class="text-primary text-sm font-bold bg-primary/20 px-2 py-0.5 rounded-full">+12%</span>
+</div>
+<p class="text-slate-400 dark:text-slate-500 text-xs">Derniers 30 jours</p>
+</div>
+<div class="flex min-h-[200px] flex-1 flex-col gap-6 py-2">
+<svg fill="none" height="160" preserveaspectratio="none" viewbox="0 0 472 150" width="100%" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H0V109Z" fill="url(#chart_gradient)"></path>
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25" stroke="#a1e633" stroke-linecap="round" stroke-width="4"></path>
+<defs>
+<lineargradient gradientunits="userSpaceOnUse" id="chart_gradient" x1="236" x2="236" y1="1" y2="149">
+<stop stop-color="#a1e633" stop-opacity="0.3"></stop>
+<stop offset="1" stop-color="#a1e633" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="flex justify-between px-2">
+<p class="text-slate-400 text-[11px] font-bold uppercase">1 Mai</p>
+<p class="text-slate-400 text-[11px] font-bold uppercase">15 Mai</p>
+<p class="text-slate-400 text-[11px] font-bold uppercase">30 Mai</p>
+</div>
+</div>
+</div>
+<!-- Spending Insights Section -->
+<div class="flex flex-col gap-4">
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Insights par catégorie</h2>
+<div class="grid grid-cols-1 gap-3">
+<!-- Category Item -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white font-bold text-sm">Alimentation</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">8 transactions ce mois</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white font-bold text-sm">450.00 €</p>
+<p class="text-red-500 text-xs font-medium">+5% vs avr.</p>
+</div>
+</div>
+<!-- Category Item -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white font-bold text-sm">Logement</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Charges &amp; Loyer</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white font-bold text-sm">1,200.00 €</p>
+<p class="text-primary text-xs font-medium">Stable</p>
+</div>
+</div>
+<!-- Category Item -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white font-bold text-sm">Transport</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Essence &amp; Parking</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white font-bold text-sm">125.00 €</p>
+<p class="text-primary text-xs font-medium">-12% vs avr.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Spacer for bottom nav -->
+<div class="h-20"></div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 w-full flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-4 pb-6 pt-2 z-20">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500 hover:text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">dashboard</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Tableau</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-900 dark:text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">query_stats</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Analyse</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500 hover:text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Cartes</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-slate-500 hover:text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Profil</p>
+</a>
+</div>
+</div>
+</body></html>

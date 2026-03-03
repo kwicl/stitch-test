@@ -1,0 +1,40 @@
+{
+    "projectId": "4105782733511474357",
+    "title": "Dashboard Principal",
+    "url": "https://stitch.withgoogle.com/projects/4105782733511474357",
+    "deviceType": "MOBILE",
+    "designTheme": {
+        "colorMode": "LIGHT",
+        "font": "INTER",
+        "roundness": "ROUND_FULL",
+        "customColor": "#2ecc70",
+        "saturation": 2
+    },
+    "screens": [
+        {
+            "id": "935305f5deb047cf9f3058ca2d63a353",
+            "title": "Budgets Sombres",
+            "width": 780,
+            "height": 1768
+        },
+        {
+            "id": "b5b6ee93899a4f34898961388fece7d0",
+            "title": "Dashboard Sombre - Bar Chart V3",
+            "width": 780,
+            "height": 2986
+        },
+        {
+            "id": "869c583d42ee49538583aa7b78d9a907",
+            "title": "Analyse Sombre",
+            "width": 780,
+            "height": 2424
+        },
+        {
+            "id": "adc007afe1d046ab812554662f51fbf5",
+            "title": "Transactions Sombres",
+            "width": 780,
+            "height": 1772
+        }
+    ],
+    "importedAt": "2026-03-02T21:13:08Z"
+}

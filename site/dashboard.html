@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<!-- ✅ Smart Expenses — Connecté à Google Sheets -->
+
+<html class="dark" lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#a1e633",
+                        "background-light": "#f7f8f6",
+                        "background-dark": "#1b2111",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+
+        /* ── MODAL OVERLAY ──────────────────────── */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        #modal-overlay.open {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        #modal-box {
+            width: 100%;
+            max-width: 430px;
+            background: #1b2111;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 40px;
+            border-top: 1px solid rgba(161, 230, 51, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        #modal-box input,
+        #modal-box select,
+        #modal-box textarea {
+            width: 100%;
+            background: rgba(161, 230, 51, 0.05);
+            border: 1px solid rgba(161, 230, 51, 0.15);
+            border-radius: 10px;
+            color: #f1f5f9;
+            padding: 11px 14px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+
+        #modal-box input:focus,
+        #modal-box select:focus,
+        #modal-box textarea:focus {
+            border-color: #a1e633;
+        }
+
+        #modal-box select option {
+            background: #1b2111;
+            color: #f1f5f9;
+        }
+
+        /* ── TOAST NOTIFICATION ─────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #a1e633;
+            color: #1b2111;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.error {
+            background: #ef4444;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Header / Nav -->
+    <header
+        class="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-primary/10">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>
+            <h1 class="text-xl font-bold tracking-tight">Tableau de bord</h1>
+        </div>
+        <button class="p-2 rounded-full bg-slate-200 dark:bg-primary/10">
+            <span class="material-symbols-outlined">notifications</span>
+        </button>
+    </header>
+    <main class="flex-1 overflow-y-auto pb-24">
+        <!-- Balance Card -->
+        <section class="p-4">
+            <div class="bg-primary/10 border border-primary/20 rounded-xl p-6 flex flex-col gap-1">
+                <p class="text-slate-500 dark:text-primary/70 text-sm font-medium uppercase tracking-wider">Solde total
+                </p>
+                <h2 class="text-4xl font-bold text-slate-900 dark:text-slate-100">$12,450.00</h2>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-primary flex items-center text-sm font-bold">
+                        <span class="material-symbols-outlined text-sm">trending_up</span> +2.4%
+                    </span>
+                    <span class="text-slate-500 text-sm">ce mois-ci</span>
+                </div>
+            </div>
+        </section>
+        <!-- Period Selectors -->
+        <section class="px-4 py-2">
+            <div
+                class="flex h-11 items-center justify-center rounded-xl bg-slate-200 dark:bg-primary/5 p-1 border border-slate-300 dark:border-primary/10">
+                <label
+                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
+                    <span class="truncate">Jour</span>
+                    <input class="hidden" name="period" type="radio" value="Jour" />
+                </label>
+                <label
+                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
+                    <span class="truncate">Semaine</span>
+                    <input class="hidden" name="period" type="radio" value="Semaine" />
+                </label>
+                <label
+                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
+                    <span class="truncate">Mois</span>
+                    <input checked="" class="hidden" name="period" type="radio" value="Mois" />
+                </label>
+                <label
+                    class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-background-dark text-slate-600 dark:text-primary/60 text-sm font-semibold transition-all">
+                    <span class="truncate">Année</span>
+                    <input class="hidden" name="period" type="radio" value="Année" />
+                </label>
+            </div>
+        </section>
+        <!-- Cash Flow Chart Section -->
+        <section class="p-4">
+            <div class="bg-slate-50 dark:bg-primary/5 rounded-xl p-6 border border-slate-200 dark:border-primary/10">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-slate-500 dark:text-primary/70 text-sm font-medium">Flux de trésorerie</p>
+                        <p class="text-3xl font-bold">$4,200.00</p>
+                        <div class="flex items-center gap-1">
+                            <p class="text-slate-400 text-xs font-normal">Derniers 30 jours</p>
+                            <p class="text-primary text-xs font-bold">+12%</p>
+                        </div>
+                    </div>
+                    <button onclick="openModal()"
+                        class="bg-primary text-background-dark p-2 rounded-lg font-bold hover:scale-110 transition-transform"
+                        title="Ajouter une transaction">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                </div>
+                <div class="flex min-h-[160px] flex-col gap-4">
+                    <svg fill="none" height="120" preserveaspectratio="none" viewbox="-3 0 478 150" width="100%"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z"
+                            fill="url(#paint0_linear)"></path>
+                        <path
+                            d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
+                            stroke="#a1e633" stroke-linecap="round" stroke-width="3"></path>
+                        <defs>
+                            <lineargradient gradientunits="userSpaceOnUse" id="paint0_linear" x1="236" x2="236" y1="1"
+                                y2="149">
+                                <stop stop-color="#a1e633" stop-opacity="0.3"></stop>
+                                <stop offset="1" stop-color="#a1e633" stop-opacity="0"></stop>
+                            </lineargradient>
+                        </defs>
+                    </svg>
+                    <div class="flex justify-between px-2">
+                        <p class="text-slate-400 text-xs font-bold">1</p>
+                        <p class="text-slate-400 text-xs font-bold">7</p>
+                        <p class="text-slate-400 text-xs font-bold">14</p>
+                        <p class="text-slate-400 text-xs font-bold">21</p>
+                        <p class="text-slate-400 text-xs font-bold">28</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="p-4">
+            <div class="bg-slate-50 dark:bg-primary/5 rounded-xl p-6 border border-slate-200 dark:border-primary/10">
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p
+                                class="text-slate-500 dark:text-primary/70 text-xs font-medium uppercase tracking-widest">
+                                Revenus mensuels</p>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-3xl font-bold text-primary">$6,840.00</h3>
+                                <span class="flex items-center text-primary text-xs font-bold">
+                                    <span class="material-symbols-outlined text-sm">arrow_upward</span> 8%
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <p
+                                class="text-slate-500 dark:text-primary/70 text-xs font-medium uppercase tracking-widest text-right">
+                                Dépenses</p>
+                            <div class="flex items-center gap-2 justify-end">
+                                <h3 class="text-xl font-bold text-slate-400">$2,640.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-3 h-32">
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 60%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 40%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Jan</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 75%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 55%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fév</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative border-2 border-primary/40"
+                                style="height: 100%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 38%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-primary uppercase tracking-tighter">Mar</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 85%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 45%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Avr</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 65%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 30%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Mai</p>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <div class="w-full bg-primary/20 rounded-t-lg relative" style="height: 90%;">
+                                <div class="absolute bottom-0 w-full bg-primary rounded-t-lg" style="height: 50%;">
+                                </div>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Juin</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 pt-2 border-t border-slate-200 dark:border-primary/10">
+                        <div class="flex items-center gap-2">
+                            <div class="size-2 rounded-full bg-primary"></div>
+                            <span class="text-[10px] text-slate-500 uppercase font-semibold">Revenus</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="size-2 rounded-full bg-primary/20"></div>
+                            <span class="text-[10px] text-slate-500 uppercase font-semibold">Dépenses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Categories List -->
+        <section class="px-4 pb-8">
+            <h3 class="text-lg font-bold mb-4">Dépenses par catégorie</h3>
+            <div class="flex flex-col gap-3">
+                <!-- Category Item -->
+                <div
+                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="size-10 flex items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
+                            <span class="material-symbols-outlined">restaurant</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Alimentation</p>
+                            <p class="text-xs text-slate-500">24 Transactions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-slate-900 dark:text-slate-100">-$450.20</p>
+                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-orange-500" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Category Item -->
+                <div
+                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
+                    <div class="flex items-center gap-4">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-brown-500/20 text-amber-700">
+                            <span class="material-symbols-outlined">coffee</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Café</p>
+                            <p class="text-xs text-slate-500">12 Transactions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-slate-900 dark:text-slate-100">-$85.00</p>
+                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-amber-700" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Category Item -->
+                <div
+                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
+                    <div class="flex items-center gap-4">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
+                            <span class="material-symbols-outlined">medical_services</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Santé</p>
+                            <p class="text-xs text-slate-500">3 Transactions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-slate-900 dark:text-slate-100">-$120.50</p>
+                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-blue-500" style="width: 35%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Category Item -->
+                <div
+                    class="flex items-center justify-between p-4 bg-slate-50 dark:bg-primary/5 rounded-xl border border-slate-200 dark:border-primary/10">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="size-10 flex items-center justify-center rounded-lg bg-purple-500/20 text-purple-500">
+                            <span class="material-symbols-outlined">movie</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Loisirs</p>
+                            <p class="text-xs text-slate-500">8 Transactions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-slate-900 dark:text-slate-100">-$210.00</p>
+                        <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-purple-500" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ══════════════════════════════════════════
+     MODAL — Ajouter une transaction
+══════════════════════════════════════════ -->
+    <div id="modal-overlay" onclick="handleOverlayClick(event)">
+        <div id="modal-box">
+            <!-- Titre -->
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold text-slate-100">➕ Nouvelle transaction</h2>
+                <button onclick="closeModal()"
+                    class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <!-- Indicateur de statut Google Sheets -->
+            <div id="sheets-status" class="text-xs text-slate-400 mb-4 flex items-center gap-2">
+                <span id="status-dot"
+                    style="width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;"></span>
+                <span id="status-text">Vérification connexion Google Sheets...</span>
+            </div>
+
+            <!-- Formulaire -->
+            <form id="transaction-form" onsubmit="submitTransaction(event)">
+
+                <!-- Date -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📅 Date</label>
+                <input type="date" id="f-date" required />
+
+                <!-- Montant -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰
+                    Montant</label>
+                <input type="number" id="f-montant" placeholder="Ex: 25" step="0.01" min="0" required />
+
+                <!-- Type de mouvement (Income) -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📌 Type</label>
+                <select id="f-income">
+                    <option value="">— Dépense —</option>
+                    <option value="Revenu">💚 Revenu / Income</option>
+                    <option value="Investissement">📈 Investissement</option>
+                </select>
+
+                <!-- Catégorie -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️
+                    Catégorie</label>
+                <select id="f-categorie" required>
+                    <option value="">Choisir une catégorie...</option>
+                    <option>Alimentation</option>
+                    <option>Café</option>
+                    <option>Transport</option>
+                    <option>Déplacement</option>
+                    <option>Santé</option>
+                    <option>Voyages</option>
+                    <option>Bien-être</option>
+                    <option>Maison et frais de service</option>
+                    <option>Électroménagers</option>
+                    <option>Éducation enfant</option>
+                    <option>Appartement</option>
+                    <option>INVESTISSEMENT</option>
+                    <option>Loisirs</option>
+                    <option>Autre</option>
+                </select>
+
+                <!-- Mode de paiement -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💳 Mode de
+                    paiement</label>
+                <select id="f-paiement">
+                    <option>Espèces</option>
+                    <option>Virement</option>
+                    <option>Mobile</option>
+                    <option>Chèque</option>
+                    <option>Carte bancaire</option>
+                </select>
+
+                <!-- Lieu -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu
+                    (optionnel)</label>
+                <input type="text" id="f-lieu" placeholder="Ex: Marché central, Darty..." />
+
+                <!-- Description -->
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝 Description
+                    (optionnel)</label>
+                <textarea id="f-description" rows="2" placeholder="Notes supplémentaires..."></textarea>
+
+                <!-- Bouton Envoyer -->
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl text-sm mt-2 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    <span id="submit-icon">✅</span>
+                    <span id="submit-label">Enregistrer dans Google Sheets</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast"></div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-primary/10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg px-4 pb-6 pt-2">
+        <div class="flex gap-2 max-w-md mx-auto">
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-primary" href="#">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Accueil</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
+                href="#">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Portefeuille</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
+                href="#">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Stats</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-400 dark:text-primary/40"
+                href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Réglages</p>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ══════════════════════════════════════════
+     JAVASCRIPT — Intégration Google Sheets
+══════════════════════════════════════════ -->
+    <script>
+        // ╔══════════════════════════════════════════════════════════════╗
+        // ║  ⚠️  CONFIGURATION — REMPLACEZ PAR VOTRE URL APPS SCRIPT   ║
+        // ╚══════════════════════════════════════════════════════════════╝
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+        //
+        // Exemple :
+        // const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycby.../exec";
+
+        // ── OUVRIR / FERMER la modal ──────────────────────────────────
+        function openModal() {
+            document.getElementById("modal-overlay").classList.add("open");
+            // Mettre la date d'aujourd'hui par défaut
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("f-date").value = today;
+        }
+
+        function closeModal() {
+            document.getElementById("modal-overlay").classList.remove("open");
+            document.getElementById("transaction-form").reset();
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById("modal-overlay")) closeModal();
+        }
+
+        // ── AFFICHER un toast ─────────────────────────────────────────
+        function showToast(message, isError = false) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = "show" + (isError ? " error" : "");
+            setTimeout(() => { toast.className = ""; }, 3500);
+        }
+
+        // ── ENVOYER une transaction à Google Sheets ───────────────────
+        async function submitTransaction(event) {
+            event.preventDefault();
+
+            // Vérifier que l'URL est configurée
+            if (SHEETS_API_URL === "COLLEZ_VOTRE_URL_APPS_SCRIPT_ICI") {
+                showToast("⚠️ Configurez d'abord SHEETS_API_URL dans le code !", true);
+                return;
+            }
+
+            // Récupérer les valeurs du formulaire
+            const transaction = {
+                action: "addTransaction",
+                date: document.getElementById("f-date").value,
+                montant: parseFloat(document.getElementById("f-montant").value),
+                income: document.getElementById("f-income").value,
+                categorie: document.getElementById("f-categorie").value,
+                paiement: document.getElementById("f-paiement").value,
+                lieu: document.getElementById("f-lieu").value,
+                description: document.getElementById("f-description").value
+            };
+
+            // Afficher un spinner
+            const btn = document.getElementById("submit-btn");
+            const icon = document.getElementById("submit-icon");
+            const label = document.getElementById("submit-label");
+            btn.disabled = true;
+            icon.textContent = "⏳";
+            label.textContent = "Envoi en cours...";
+
+            try {
+                // Envoyer vers Google Sheets (mode no-cors pour éviter les erreurs CORS)
+                await fetch(SHEETS_API_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(transaction)
+                });
+
+                // Succès !
+                showToast("✅ Transaction ajoutée dans Google Sheets !");
+                closeModal();
+
+            } catch (err) {
+                console.error("Erreur:", err);
+                showToast("❌ Erreur réseau. Vérifiez votre connexion.", true);
+            } finally {
+                // Remettre le bouton en état normal
+                btn.disabled = false;
+                icon.textContent = "✅";
+                label.textContent = "Enregistrer dans Google Sheets";
+            }
+        }
+
+        // ── VÉRIFIER la connexion au démarrage ────────────────────────
+        window.addEventListener("DOMContentLoaded", function () {
+            const dot = document.getElementById("status-dot");
+            const text = document.getElementById("status-text");
+
+            if (SHEETS_API_URL === "COLLEZ_VOTRE_URL_APPS_SCRIPT_ICI") {
+                dot.style.background = "#f59e0b";
+                text.textContent = "⚠️ URL Apps Script non configurée";
+            } else {
+                dot.style.background = "#a1e633";
+                text.textContent = "✅ Connecté à Google Sheets";
+            }
+        });
+    </script>
+</body>
+
+</html>
