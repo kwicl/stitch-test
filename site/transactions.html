@@ -1,206 +1,195 @@
 <!DOCTYPE html>
+<html class="dark" lang="fr">
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Transactions v3 - Dark Mode</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Smart Expenses — Historique</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#a1e633",
-                        "background-light": "#f7f8f6",
-                        "background-dark": "#1b2111",
-                    },
-                    fontFamily: {
-                        "display": ["Inter"]
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
+            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" } } }
         }
     </script>
-<style>
+    <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .material-symbols-fill {
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
-<header class="sticky top-0 z-10 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-primary/10">
-<div class="flex items-center p-4 justify-between">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined cursor-pointer">arrow_back</span>
-<h1 class="text-xl font-bold leading-tight tracking-tight">Transactions</h1>
-</div>
-<div class="flex items-center gap-2">
-<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-primary/10">
-<span class="material-symbols-outlined">search</span>
-</button>
-<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-primary/10">
-<span class="material-symbols-outlined">tune</span>
-</button>
-</div>
-</div>
-<div class="px-4 pb-2">
-<div class="flex gap-6 overflow-x-auto no-scrollbar">
-<a class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-2 shrink-0" href="#">
-<span class="text-sm font-bold">All</span>
-</a>
-<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 pb-2 shrink-0" href="#">
-<span class="text-sm font-bold">Income</span>
-</a>
-<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 pb-2 shrink-0" href="#">
-<span class="text-sm font-bold">Expenses</span>
-</a>
-<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 pb-2 shrink-0" href="#">
-<span class="text-sm font-bold">Subscription</span>
-</a>
-</div>
-</div>
-</header>
-<main class="flex-1 overflow-y-auto">
-<div class="flex gap-2 p-4 overflow-x-auto no-scrollbar">
-<button class="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-primary/10 px-4 border border-transparent hover:border-primary/30">
-<span class="text-sm font-medium">This Week</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</button>
-<button class="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-primary/10 px-4">
-<span class="text-sm font-medium">Category</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</button>
-<button class="flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-primary/10 px-4">
-<span class="text-sm font-medium">Account</span>
-<span class="material-symbols-outlined text-sm">expand_more</span>
-</button>
-</div>
-<div class="px-4 py-2 bg-slate-50 dark:bg-primary/5">
-<h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Today, Oct 24</h3>
-</div>
-<div class="divide-y divide-slate-100 dark:divide-primary/10">
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer">
-<div class="size-12 rounded-xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-400">
-<span class="material-symbols-outlined">restaurant</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Alimentation</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Monoprix Market</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-slate-900 dark:text-slate-100">-42.50 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">14:32</p>
-</div>
-</div>
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer">
-<div class="size-12 rounded-xl bg-brown-100 dark:bg-amber-800/20 flex items-center justify-center text-amber-900 dark:text-amber-500">
-<span class="material-symbols-outlined">coffee</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Café</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Starbucks Central</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-slate-900 dark:text-slate-100">-5.80 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">10:15</p>
-</div>
-</div>
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer">
-<div class="size-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined">payments</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Income</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Freelance Payment</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-primary">+1,250.00 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">09:00</p>
-</div>
-</div>
-</div>
-<div class="px-4 py-2 bg-slate-50 dark:bg-primary/5">
-<h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Yesterday, Oct 23</h3>
-</div>
-<div class="divide-y divide-slate-100 dark:divide-primary/10">
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer">
-<div class="size-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-<span class="material-symbols-outlined">tv_gen</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Electroménagers</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Darty Store</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-slate-900 dark:text-slate-100">-299.00 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">18:45</p>
-</div>
-</div>
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer">
-<div class="size-12 rounded-xl bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-<span class="material-symbols-outlined">directions_car</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Transport</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Uber Trip</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-slate-900 dark:text-slate-100">-18.20 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">16:20</p>
-</div>
-</div>
-<div class="flex items-center p-4 gap-4 hover:bg-slate-50 dark:hover:bg-primary/5 cursor-pointer pb-24">
-<div class="size-12 rounded-xl bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400">
-<span class="material-symbols-outlined">home</span>
-</div>
-<div class="flex-1 min-w-0">
-<p class="font-semibold text-slate-900 dark:text-slate-100 truncate">Loyer</p>
-<p class="text-sm text-slate-500 dark:text-slate-400">Monthly Rent</p>
-</div>
-<div class="text-right">
-<p class="font-bold text-slate-900 dark:text-slate-100">-850.00 €</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">08:00</p>
-</div>
-</div>
-</div>
-</main>
-<button class="fixed bottom-24 right-6 size-14 rounded-full bg-primary text-background-dark shadow-xl flex items-center justify-center hover:scale-105 transition-transform">
-<span class="material-symbols-outlined text-3xl font-bold">add</span>
-</button>
-<nav class="sticky bottom-0 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/20 pb-safe">
-<div class="flex h-16 items-center justify-around px-4">
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">home</span>
-<span class="text-[10px] font-medium">Home</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-primary" href="#">
-<span class="material-symbols-outlined material-symbols-fill">receipt_long</span>
-<span class="text-[10px] font-medium">History</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">pie_chart</span>
-<span class="text-[10px] font-medium">Stats</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">person</span>
-<span class="text-[10px] font-medium">Profile</span>
-</a>
-</div>
-</nav>
-</body></html>
+</head>
+
+<body class="bg-background-dark text-slate-100 min-h-screen flex flex-col">
+
+    <header class="sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg border-b border-primary/10">
+        <div class="flex items-center p-4 justify-between">
+            <div class="flex items-center gap-4">
+                <a href="dashboard.html" class="material-symbols-outlined text-primary">arrow_back</a>
+                <h1 class="text-xl font-bold">Historique</h1>
+            </div>
+            <div id="sync-status" class="text-[10px] text-primary/60 bg-primary/10 px-2 py-1 rounded-full italic">
+                Synchronisation...</div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto pb-24">
+        <!-- Filtres simples -->
+        <div class="flex gap-2 p-4 overflow-x-auto no-scrollbar">
+            <button onclick="filterType('all')" id="btn-all"
+                class="flex h-9 shrink-0 items-center justify-center rounded-lg bg-primary text-background-dark px-4 text-sm font-bold">Tout</button>
+            <button onclick="filterType('rev')" id="btn-rev"
+                class="flex h-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-slate-400 px-4 text-sm font-medium">Revenus</button>
+            <button onclick="filterType('dep')" id="btn-dep"
+                class="flex h-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-slate-400 px-4 text-sm font-medium">Dépenses</button>
+        </div>
+
+        <!-- Liste des transactions -->
+        <div id="history-list" class="divide-y divide-primary/5">
+            <!-- Les données seront insérées ici -->
+            <div class="p-10 text-center opacity-50">Chargement de votre fichier Google Sheets...</div>
+        </div>
+
+        <div id="empty-state" class="hidden p-20 text-center">
+            <span class="material-symbols-outlined text-5xl text-slate-600 mb-4">search_off</span>
+            <p class="text-slate-500">Aucune donnée trouvée</p>
+        </div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 border-t border-primary/10 bg-background-dark/95 backdrop-blur-lg px-4 pb-6 pt-2 z-10">
+        <div class="flex gap-2 max-w-md mx-auto">
+            <a href="dashboard.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">home</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Accueil</p>
+            </a>
+            <a href="transactions.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-primary">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Portefeuille</p>
+            </a>
+            <a href="analyse.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Stats</p>
+            </a>
+            <a href="budgets.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
+                <span class="material-symbols-outlined">account_balance</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Budgets</p>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+
+        let allTx = [];
+        let currentFilter = 'all';
+
+        // Formattage robuste des montants
+        function cleanAmount(v) {
+            if (typeof v === 'number') return v;
+            if (!v) return 0;
+            return parseFloat(String(v).replace(/[^\d.-]/g, '')) || 0;
+        }
+
+        function fmtDH(v) {
+            return new Intl.NumberFormat('fr-MA').format(Math.round(v)) + ' DH';
+        }
+
+        function isRev(t) {
+            return t.income && String(t.income).trim() !== '';
+        }
+
+        // Parsing de date ultra-robuste
+        function parseDt(s) {
+            if (!s) return null;
+            const str = String(s).trim();
+            const parts = str.split(/[/\- ]/);
+            if (parts.length >= 3) {
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]); // YYYY-MM-DD
+                return new Date(parts[2], parts[1] - 1, parts[0]); // DD/MM/YYYY
+            }
+            return new Date(str);
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
+                const data = await res.json();
+                if (data.success) {
+                    allTx = data.data;
+                    document.getElementById('sync-status').textContent = `Dernière synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
+                    renderTransactions();
+                }
+            } catch (e) {
+                document.getElementById('history-list').innerHTML = `<div class="p-10 text-center text-red-400">Impossible de charger les données. Vérifiez votre URL API.</div>`;
+            }
+        }
+
+        function filterType(type) {
+            currentFilter = type;
+            ['all', 'rev', 'dep'].forEach(id => {
+                const btn = document.getElementById('btn-' + id);
+                btn.classList.toggle('bg-primary', id === type);
+                btn.classList.toggle('text-background-dark', id === type);
+                btn.classList.toggle('bg-primary/10', id !== type);
+                btn.classList.toggle('text-slate-400', id !== type);
+            });
+            renderTransactions();
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('history-list');
+            const empty = document.getElementById('empty-state');
+
+            let filtered = allTx;
+            if (currentFilter === 'rev') filtered = allTx.filter(isRev);
+            if (currentFilter === 'dep') filtered = allTx.filter(t => !isRev(t));
+
+            // Tri par date (plus récent en haut)
+            filtered.sort((a, b) => (parseDt(b.date) || 0) - (parseDt(a.date) || 0));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            container.innerHTML = filtered.map(t => {
+                const revenue = isRev(t);
+                const amount = cleanAmount(t.montant);
+                const date = parseDt(t.date);
+                const dateStr = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' }) : t.date;
+                const cat = revenue ? (t.income || 'Revenu') : (t.categorie || 'Dépense');
+                const lieu = t.lieu || t.description || (revenue ? 'Entrée' : 'Sortie');
+
+                return `
+      <div class="flex items-center p-4 gap-4 hover:bg-primary/5 transition-colors">
+        <div class="size-12 rounded-xl ${revenue ? 'bg-primary/20 text-primary' : 'bg-red-500/10 text-red-500'} flex items-center justify-center">
+          <span class="material-symbols-outlined">${revenue ? 'trending_up' : 'payments'}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold truncate">${cat}</p>
+          <p class="text-xs text-slate-500 truncate">${lieu}</p>
+        </div>
+        <div class="text-right">
+          <p class="font-bold ${revenue ? 'text-primary' : 'text-slate-100'}">${revenue ? '+' : '-'}${fmtDH(amount)}</p>
+          <p class="text-[10px] text-slate-500 uppercase tracking-tighter">${dateStr}</p>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        window.onload = loadHistory;
+    </script>
+</body>
+
+</html>

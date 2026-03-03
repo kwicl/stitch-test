@@ -1,194 +1,206 @@
 <!DOCTYPE html>
+<html class="dark" lang="fr">
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Budgets v3 - Dark Mode</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Smart Expenses — Budgets</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#a1e633",
-                        "background-light": "#f7f8f6",
-                        "background-dark": "#1b2111",
-                    },
-                    fontFamily: {
-                        "display": ["Inter"]
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
+            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" } } }
         }
     </script>
-<style>
+    <style>
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
-<!-- Header Section -->
-<header class="sticky top-0 z-10 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-primary/10">
-<div class="flex items-center p-4 justify-between">
-<div class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center cursor-pointer">
-<span class="material-symbols-outlined">menu</span>
-</div>
-<h1 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Budgets</h1>
-<div class="flex w-10 items-center justify-end">
-<button class="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary">
-<span class="material-symbols-outlined">account_circle</span>
-</button>
-</div>
-</div>
-<!-- Period Selector -->
-<div class="px-4">
-<div class="flex gap-8 overflow-x-auto no-scrollbar">
-<a class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 pt-2 whitespace-nowrap" href="#">
-<p class="text-sm font-bold">Monthly</p>
-</a>
-<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 pb-3 pt-2 whitespace-nowrap" href="#">
-<p class="text-sm font-medium">Quarterly</p>
-</a>
-<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 pb-3 pt-2 whitespace-nowrap" href="#">
-<p class="text-sm font-medium">Yearly</p>
-</a>
-</div>
-</div>
-</header>
-<!-- Main Content -->
-<main class="flex-1 overflow-y-auto p-4 space-y-6">
-<!-- Summary Card (Optional/Extra context) -->
-<div class="bg-primary/5 border border-primary/20 rounded-xl p-4">
-<div class="flex justify-between items-center mb-2">
-<span class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Spent</span>
-<span class="text-xs font-bold bg-primary text-background-dark px-2 py-0.5 rounded-full">On Track</span>
-</div>
-<p class="text-3xl font-bold text-slate-900 dark:text-slate-100">$4,250.00</p>
-<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">of $8,000.00 monthly limit</p>
-</div>
-<h2 class="text-xl font-bold leading-tight tracking-tight mt-6">All Categories</h2>
-<div class="space-y-6">
-<!-- Category 1: Safe -->
-<div class="flex flex-col gap-2">
-<div class="flex justify-between items-end">
-<div>
-<p class="text-slate-900 dark:text-slate-100 text-base font-semibold">Villa Camelia</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">Maintenance &amp; Utilities</p>
-</div>
-<div class="text-right">
-<p class="text-slate-900 dark:text-slate-100 text-sm font-bold">$1,200</p>
-<p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spent</p>
-</div>
-</div>
-<div class="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 45%;"></div>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-<p class="text-primary text-xs font-medium">Lime Green - Safe (45%)</p>
-</div>
-</div>
-<!-- Category 2: Warning -->
-<div class="flex flex-col gap-2">
-<div class="flex justify-between items-end">
-<div>
-<p class="text-slate-900 dark:text-slate-100 text-base font-semibold">Appartement Kenitra</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">Renovations</p>
-</div>
-<div class="text-right">
-<p class="text-slate-900 dark:text-slate-100 text-sm font-bold">$2,850</p>
-<p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spent</p>
-</div>
-</div>
-<div class="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-<div class="h-full bg-orange-500 rounded-full" style="width: 82%;"></div>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-orange-500">warning</span>
-<p class="text-orange-500 text-xs font-medium">Orange - High usage (82%)</p>
-</div>
-</div>
-<!-- Category 3: Danger -->
-<div class="flex flex-col gap-2">
-<div class="flex justify-between items-end">
-<div>
-<p class="text-slate-900 dark:text-slate-100 text-base font-semibold">Voyages</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">Summer Vacation Fund</p>
-</div>
-<div class="text-right">
-<p class="text-slate-900 dark:text-slate-100 text-sm font-bold">$3,900</p>
-<p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spent</p>
-</div>
-</div>
-<div class="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-<div class="h-full bg-red-500 rounded-full" style="width: 95%;"></div>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-red-500">error</span>
-<p class="text-red-500 text-xs font-medium">Red - Critical limit (95%)</p>
-</div>
-</div>
-<!-- Category 4: Safe -->
-<div class="flex flex-col gap-2">
-<div class="flex justify-between items-end">
-<div>
-<p class="text-slate-900 dark:text-slate-100 text-base font-semibold">Groceries</p>
-<p class="text-xs text-slate-500 dark:text-slate-400">Daily Essentials</p>
-</div>
-<div class="text-right">
-<p class="text-slate-900 dark:text-slate-100 text-sm font-bold">$450</p>
-<p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Spent</p>
-</div>
-</div>
-<div class="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 30%;"></div>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-<p class="text-primary text-xs font-medium">Lime Green - Safe (30%)</p>
-</div>
-</div>
-</div>
-<div class="mt-8 mb-20 text-center">
-<button class="bg-primary/10 border border-primary/20 text-primary px-6 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2">
-<span class="material-symbols-outlined">add_circle</span>
-                Add New Category
-            </button>
-</div>
-</main>
-<!-- Bottom Navigation Bar -->
-<nav class="fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark pb-6 pt-2">
-<div class="flex justify-around items-center max-w-md mx-auto">
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">home</span>
-<p class="text-[10px] font-medium leading-normal">Home</p>
-</a>
-<a class="flex flex-col items-center gap-1 text-primary" href="#">
-<span class="material-symbols-outlined font-variation-fill">pie_chart</span>
-<p class="text-[10px] font-bold leading-normal">Budgets</p>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">bar_chart</span>
-<p class="text-[10px] font-medium leading-normal">Stats</p>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400" href="#">
-<span class="material-symbols-outlined">settings</span>
-<p class="text-[10px] font-medium leading-normal">Settings</p>
-</a>
-</div>
-</nav>
-</body></html>
+</head>
+
+<body class="bg-background-dark text-slate-100 min-h-screen flex flex-col">
+
+    <header class="p-4 border-b border-primary/10 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg">
+        <div class="flex items-center gap-4">
+            <a href="dashboard.html" class="material-symbols-outlined text-primary">arrow_back</a>
+            <h1 class="text-xl font-bold">Suivi des Budgets</h1>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto pb-28 p-4 space-y-6">
+
+        <!-- DEPENSES DU MOIS VS BUDGET -->
+        <section class="bg-primary/10 border border-primary/20 rounded-2xl p-5">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-xs text-primary/70 uppercase font-bold tracking-widest mb-1">Dépenses ce mois</p>
+                    <h2 id="total-spent" class="text-4xl font-bold">— DH</h2>
+                </div>
+                <div id="status-badge"
+                    class="bg-primary text-background-dark text-[10px] font-bold px-3 py-1 rounded-full uppercase">
+                    Optimal</div>
+            </div>
+            <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-2">
+                <div id="total-progress" class="h-full bg-primary" style="width:0%"></div>
+            </div>
+            <p id="budget-info" class="text-xs text-slate-400">Progression basée sur vos dépenses mensuelles moyennes
+            </p>
+        </section>
+
+        <h3 class="text-base font-bold">Budgets par Catégorie</h3>
+        <div id="budget-list" class="space-y-6">
+            <div class="p-8 text-center text-slate-500 italic">Analyse de vos habitudes...</div>
+        </div>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 border-t border-primary/10 bg-background-dark/95 backdrop-blur-lg px-4 pb-6 pt-2 z-10">
+        <div class="flex gap-2 max-w-md mx-auto">
+            <a href="dashboard.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400 font-medium">
+                <span class="material-symbols-outlined">home</span>
+                <p class="text-[10px] uppercase tracking-widest">Accueil</p>
+            </a>
+            <a href="transactions.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400 font-medium">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <p class="text-[10px] uppercase tracking-widest">Portefeuille</p>
+            </a>
+            <a href="analyse.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400 font-medium">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <p class="text-[10px] uppercase tracking-widest">Stats</p>
+            </a>
+            <a href="budgets.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-primary font-bold">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">account_balance</span>
+                <p class="text-[10px] uppercase tracking-widest">Budgets</p>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+
+        function cleanAmount(v) {
+            if (typeof v === 'number') return v;
+            if (!v) return 0;
+            let s = String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+            return parseFloat(s) || 0;
+        }
+
+        function fmtDH(v) {
+            return new Intl.NumberFormat('fr-MA').format(Math.round(v)) + ' DH';
+        }
+
+        function isRev(t) {
+            return t.income && String(t.income).trim() !== "" && String(t.income).trim().toLowerCase() !== "false";
+        }
+
+        function parseDt(s) {
+            if (!s) return null;
+            let str = String(s).trim();
+            const parts = str.split(/[/\- ]/);
+            if (parts.length >= 3) {
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(str);
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
+                const data = await res.json();
+                if (data.success) {
+                    renderBudgets(data.data);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderBudgets(tx) {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            const cats = {};
+            let totalSpentMonth = 0;
+
+            tx.forEach(t => {
+                if (isRev(t)) return;
+                const d = parseDt(t.date);
+                if (!d) return;
+
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    const c = t.categorie || 'Autre';
+                    const a = cleanAmount(t.montant);
+                    cats[c] = (cats[c] || 0) + a;
+                    totalSpentMonth += a;
+                }
+            });
+
+            // Budget global estimé (on prend 20% de plus que la moyenne ou un palier fixe)
+            // Pour la démo, on utilise un budget cible fictif basé sur les données
+            const targetBudget = totalSpentMonth > 5000 ? totalSpentMonth * 1.2 : 10000;
+            const globalPct = Math.min(100, Math.round((totalSpentMonth / targetBudget) * 100));
+
+            document.getElementById('total-spent').textContent = fmtDH(totalSpentMonth);
+            document.getElementById('total-progress').style.width = globalPct + '%';
+            document.getElementById('budget-info').textContent = `Cible estimée : ${fmtDH(targetBudget)} pour ce mois.`;
+
+            if (globalPct > 90) {
+                document.getElementById('status-badge').textContent = 'CRITIQUE';
+                document.getElementById('status-badge').className = 'bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase';
+            }
+
+            const list = document.getElementById('budget-list');
+            const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+
+            list.innerHTML = sorted.map(([name, amount]) => {
+                // Calcul d'un budget par catégorie (exemple: 10% au dessus du montant actuel pour simuler une limite)
+                const catLimit = amount * 1.25;
+                const pct = Math.min(100, Math.round((amount / catLimit) * 100));
+                let color = 'bg-primary';
+                let icon = 'check_circle';
+                let iconColor = 'text-primary';
+
+                if (pct > 70) { color = 'bg-orange-500'; icon = 'warning'; iconColor = 'text-orange-500'; }
+                if (pct > 90) { color = 'bg-red-500'; icon = 'error'; iconColor = 'text-red-500'; }
+
+                return `
+      <div class="space-y-3">
+        <div class="flex justify-between items-end">
+          <div>
+            <p class="text-base font-bold">${name}</p>
+            <p class="text-[10px] text-slate-500 uppercase tracking-tighter">Budget estimé : ${fmtDH(catLimit)}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold text-slate-100">${fmtDH(amount)}</p>
+            <p class="text-[10px] text-slate-500 uppercase">Dépensé</p>
+          </div>
+        </div>
+        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full ${color} transition-all duration-1000" style="width:${pct}%"></div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] ${iconColor}">${icon}</span>
+          <p class="${iconColor} text-[10px] font-bold uppercase tracking-widest">${pct}% de la limite</p>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+
+</html>

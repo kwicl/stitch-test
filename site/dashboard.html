@@ -395,35 +395,79 @@
         // ═══════════════════════════════════════════════
         // UTILS
         // ═══════════════════════════════════════════════
+
+        // Formattage robuste des montants (arrache les nombres de n'importe quel texte)
+        function cleanAmount(v) {
+            if (typeof v === 'number') return v;
+            if (!v) return 0;
+            // Supprime tout sauf chiffres, point, virgule (transformée en point) et signe moins
+            let s = String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+            return parseFloat(s) || 0;
+        }
+
+        // Parsing de date ultra-robuste (Gère JJ/MM/AAAA, AAAA-MM-JJ et formats Google)
         function parseDt(s) {
             if (!s) return null;
-            const str = String(s).trim();
-            const m1 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (m1) return new Date(+m1[3], +m1[2] - 1, +m1[1]);
-            const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-            if (m2) return new Date(+m2[1], +m2[2] - 1, +m2[3]);
-            const d = new Date(str); return isNaN(d) ? null : d;
+            let str = String(s).trim();
+
+            // Format Date(2025,10,22) de Google
+            if (str.includes('Date(')) {
+                const m = str.match(/\d+/g);
+                if (m) return new Date(m[0], m[1], m[2]);
+            }
+
+            // Format JJ/MM/AAAA ou JJ-MM-AAAA
+            const parts = str.split(/[/\- ]/);
+            if (parts.length >= 3) {
+                // Si le premier bloc fait 4 chiffres, c'est AAAA-MM-JJ
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                // Sinon on considère JJ/MM/AAAA (très commun en France/Maroc)
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+
+            const d = new Date(str);
+            return isNaN(d) ? null : d;
         }
 
         function fmtDH(v) {
             return new Intl.NumberFormat('fr-MA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(v)) + ' DH';
         }
 
-        function isRev(t) { return t.income && String(t.income).trim() !== ''; }
+        function isRev(t) {
+            // Une transaction est un revenu si la colonne D (Income) contient du texte
+            return t.income && String(t.income).trim() !== "" && String(t.income).trim().toLowerCase() !== "false";
+        }
 
         function getFiltered() {
             const now = new Date();
             if (period === 'all') return allTx;
             if (period.startsWith('month:')) {
                 const [y, m] = period.slice(6).split('-').map(Number);
-                return allTx.filter(t => { const d = parseDt(t.date); return d && d.getFullYear() === y && d.getMonth() === m - 1; });
+                return allTx.filter(t => {
+                    const d = parseDt(t.date);
+                    return d && d.getFullYear() === y && d.getMonth() === m - 1;
+                });
             }
             let start;
-            if (period === 'jour') { start = new Date(now); start.setHours(0, 0, 0, 0); }
-            if (period === 'semaine') { start = new Date(now); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - start.getDay()); }
-            if (period === 'mois') { start = new Date(now.getFullYear(), now.getMonth(), 1); }
-            if (period === 'annee') { start = new Date(now.getFullYear(), 0, 1); }
-            return allTx.filter(t => { const d = parseDt(t.date); return d && d >= start && d <= now; });
+            if (period === 'jour') {
+                start = new Date(now); start.setHours(0, 0, 0, 0);
+            }
+            if (period === 'semaine') {
+                start = new Date(now); start.setHours(0, 0, 0, 0);
+                // Trouver le lundi de la semaine
+                const day = start.getDay() || 7;
+                if (day !== 1) start.setHours(-24 * (day - 1));
+            }
+            if (period === 'mois') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+            }
+            if (period === 'annee') {
+                start = new Date(now.getFullYear(), 0, 1);
+            }
+            return allTx.filter(t => {
+                const d = parseDt(t.date);
+                return d && d >= start && d <= now;
+            });
         }
 
         // ═══════════════════════════════════════════════
@@ -431,7 +475,11 @@
         // ═══════════════════════════════════════════════
         function updateStats(tx) {
             let rev = 0, dep = 0;
-            tx.forEach(t => { const a = parseFloat(t.montant) || 0; isRev(t) ? rev += a : dep += a; });
+            tx.forEach(t => {
+                const a = cleanAmount(t.montant);
+                if (isRev(t)) rev += a;
+                else dep += a;
+            });
             const ep = rev - dep;
             document.getElementById('balance-total').textContent = fmtDH(ep);
             document.getElementById('stat-revenus').textContent = fmtDH(rev);
@@ -456,8 +504,9 @@
                 const d = parseDt(t.date); if (!d) return;
                 const k = d.toISOString().slice(0, 10);
                 if (!byDate[k]) byDate[k] = { rev: 0, dep: 0 };
-                const a = parseFloat(t.montant) || 0;
-                isRev(t) ? byDate[k].rev += a : byDate[k].dep += a;
+                const a = cleanAmount(t.montant);
+                if (isRev(t)) byDate[k].rev += a;
+                else byDate[k].dep += a;
             });
 
             const keys = Object.keys(byDate).sort();
@@ -519,14 +568,19 @@
         function updateTxList(tx) {
             const list = document.getElementById('tx-list');
             const empty = document.getElementById('tx-empty');
-            const sorted = [...tx].sort((a, b) => { const da = parseDt(a.date), db = parseDt(b.date); return (db || 0) - (da || 0); });
+            // Tri par date réel pour les 10 plus récents
+            const sorted = [...allTx].sort((a, b) => {
+                const da = parseDt(a.date), db = parseDt(b.date);
+                return (db || 0) - (da || 0);
+            });
             const recent = sorted.slice(0, 10);
+
             if (!recent.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
             empty.classList.add('hidden');
             list.innerHTML = recent.map(t => {
                 const s = getIcon(t);
                 const income = isRev(t);
-                const amount = parseFloat(t.montant) || 0;
+                const amount = cleanAmount(t.montant);
                 const label = income ? (String(t.income).slice(0, 22) || 'Revenu') : (t.categorie || 'Transaction');
                 const sub = t.lieu || t.description || (income ? 'Revenu' : 'Dépense');
                 const d = parseDt(t.date);
@@ -662,10 +716,8 @@
                 await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(tx) });
                 showToast('✅ Transaction ajoutée dans Google Sheets !');
                 closeModal();
-                // Add locally for instant feedback
-                allTx.push({ ...tx, id: Date.now().toString() });
-                buildDropdown();
-                refresh();
+                // Recharger pour être sûr d'avoir les données à jour
+                loadData();
             } catch (err) {
                 showToast('❌ Erreur réseau. Réessayez.', true);
             } finally {
@@ -688,6 +740,7 @@
         // INIT
         // ═══════════════════════════════════════════════
         window.addEventListener('DOMContentLoaded', loadData);
+
     </script>
 </body>
 
