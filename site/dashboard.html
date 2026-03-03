@@ -604,10 +604,13 @@
         function updateTxList(tx) {
             const list = document.getElementById('tx-list');
             const empty = document.getElementById('tx-empty');
-            // Tri par date décroissant (plus récent en premier)
+            // Tri par date décroissant, puis par ordre d'insertion (index) pour l'heure de saisie
             const sorted = [...tx].sort((a, b) => {
                 const da = parseDt(a.date), db = parseDt(b.date);
-                return (db || 0) - (da || 0);
+                const ta = da ? da.getTime() : 0;
+                const tb = db ? db.getTime() : 0;
+                if (ta === tb) return (b.index || 0) - (a.index || 0);
+                return tb - ta;
             });
             const recent = sorted.slice(0, 15);
 
@@ -703,7 +706,8 @@
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success && Array.isArray(data.data)) {
-                    allTx = data.data;
+                    // On garde l'index d'origine pour le tri par "heure de saisie"
+                    allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
                     document.getElementById('conn-dot').style.background = '#a1e633';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
                     buildDropdown();

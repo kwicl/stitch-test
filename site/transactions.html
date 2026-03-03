@@ -152,7 +152,7 @@
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success) {
-                    allTx = data.data;
+                    allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
                     document.getElementById('sync-status').textContent = `Dernière synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
                     renderTransactions();
                 }
@@ -181,10 +181,13 @@
             if (currentFilter === 'rev') filtered = allTx.filter(isRev);
             if (currentFilter === 'dep') filtered = allTx.filter(t => !isRev(t));
 
-            // Tri par date (plus récent en haut)
+            // Tri par date décroissant, puis par index (heure de saisie)
             filtered.sort((a, b) => {
                 const da = parseDt(a.date), db = parseDt(b.date);
-                return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+                const ta = da ? da.getTime() : 0;
+                const tb = db ? db.getTime() : 0;
+                if (ta === tb) return (b.index || 0) - (a.index || 0);
+                return tb - ta;
             });
 
             if (filtered.length === 0) {
