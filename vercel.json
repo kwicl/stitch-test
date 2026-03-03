@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "outputDirectory": "site",
+    "routes": [
+        {
+            "src": "/",
+            "dest": "/dashboard.html"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
+    ]
+}
