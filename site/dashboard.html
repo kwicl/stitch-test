@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"
+        name="viewport" />
     <title>Smart Expenses — Dashboard</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -13,13 +14,25 @@
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" }, fontFamily: { "display": ["Inter"] } } }
+            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111", "bordeaux": "#800020", "bordeaux-light": "#a00028" }, fontFamily: { "display": ["Inter"] } } }
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100dvh;
+            overflow-x: hidden;
+            width: 100%;
+            touch-action: pan-y;
+            /* Anti-zoom and anti-selection for a more "app" feel */
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* Prevent scroll shift on mobile */
+        html {
+            overflow-x: hidden;
+            height: 100%;
+            touch-action: manipulation;
         }
 
         .material-symbols-outlined {
@@ -32,7 +45,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.75);
             z-index: 999;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
             align-items: flex-end;
             justify-content: center;
         }
@@ -56,11 +69,11 @@
             width: 100%;
             max-width: 430px;
             background: #1b2111;
-            border-radius: 24px 24px 0 0;
+            border-radius: 32px 32px 0 0;
             padding: 24px 20px 40px;
-            border-top: 1px solid rgba(161, 230, 51, .25);
-            animation: slideUp .3s ease;
-            max-height: 90vh;
+            border-top: 1px solid rgba(161, 230, 51, .2);
+            animation: slideUp .3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 94vh;
             overflow-y: auto;
         }
 
@@ -74,31 +87,51 @@
             }
         }
 
+        /* CRITICAL: Font-size 16px prevents iOS zoom on focus */
         #modal-box input,
         #modal-box select,
         #modal-box textarea {
             width: 100%;
             background: rgba(161, 230, 51, .05);
             border: 1px solid rgba(161, 230, 51, .15);
-            border-radius: 10px;
+            border-radius: 12px;
             color: #f1f5f9;
-            padding: 10px 13px;
-            font-size: 14px;
+            padding: 14px 16px;
+            font-size: 16px;
             font-family: 'Inter', sans-serif;
             outline: none;
-            margin-bottom: 10px;
-            transition: border-color .2s;
+            margin-bottom: 14px;
+            transition: all .2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* Large Bordeaux Category Select */
+        #f-categorie {
+            background-color: #800020 !important;
+            border-color: #a1e633 !important;
+            color: white !important;
+            font-weight: 700;
+            height: 52px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
         }
 
         #modal-box input:focus,
         #modal-box select:focus,
         #modal-box textarea:focus {
             border-color: #a1e633;
+            background-color: rgba(161, 230, 51, .08);
+            box-shadow: 0 0 0 3px rgba(161, 230, 51, 0.1);
         }
 
         #modal-box select option {
             background: #1b2111;
             color: #f1f5f9;
+            font-weight: normal;
+            font-size: 16px;
         }
 
         #toast {
@@ -108,13 +141,13 @@
             transform: translateX(-50%) translateY(20px);
             background: #a1e633;
             color: #1b2111;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 800;
             z-index: 9999;
             opacity: 0;
-            transition: all .3s ease;
+            transition: all .3s cubic-bezier(0.16, 1, 0.3, 1);
             white-space: nowrap;
             pointer-events: none;
         }
@@ -155,6 +188,25 @@
             color: #1b2111 !important;
             border-color: #a1e633 !important;
             font-weight: 700;
+        }
+
+        /* Bordeaux Submit Button */
+        #submit-btn {
+            background-color: #800020 !important;
+            color: white !important;
+            transition: all 0.2s;
+        }
+
+        #submit-btn:active {
+            transform: scale(0.98);
+            background-color: #600018 !important;
+        }
+
+        /* Bordeaux FAB */
+        .fab-bordeaux {
+            background-color: #800020 !important;
+            color: white !important;
+            box-shadow: 0 8px 20px rgba(128, 0, 32, 0.4);
         }
     </style>
 </head>
@@ -282,8 +334,8 @@
 
     <!-- FAB -->
     <button onclick="openModal()"
-        class="fixed bottom-24 right-5 size-14 rounded-full bg-primary text-background-dark shadow-xl flex items-center justify-center hover:scale-110 transition-transform z-20">
-        <span class="material-symbols-outlined text-3xl font-bold">add</span>
+        class="fixed bottom-24 right-5 size-16 rounded-full fab-bordeaux shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20">
+        <span class="material-symbols-outlined text-4xl font-bold">add</span>
     </button>
 
     <!-- BOTTOM NAV -->
@@ -752,29 +804,42 @@
         async function submitTx(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn'), icon = document.getElementById('submit-icon'), lbl = document.getElementById('submit-label');
-            btn.disabled = true; icon.textContent = '⏳'; lbl.textContent = 'Envoi en cours…';
+            const originalIcon = icon.textContent, originalLabel = lbl.textContent;
 
-            const tx = {
-                action: 'addTransaction',
+            const newTx = {
                 date: document.getElementById('f-date').value,
                 montant: parseFloat(document.getElementById('f-montant').value),
                 income: document.getElementById('f-income').value,
                 categorie: document.getElementById('f-categorie').value,
                 paiement: document.getElementById('f-paiement').value,
                 lieu: document.getElementById('f-lieu').value,
-                description: document.getElementById('f-desc').value
+                description: document.getElementById('f-desc').value,
+                index: allTx.length // Pour le tri
             };
 
+            // OPTIMISTIC UI: Update local state and UI immediately
+            allTx.push(newTx);
+            refresh();
+            closeModal();
+            showToast('⚡ Validation rapide... Enregistrement en arrière-plan.');
+
+            // Send to Google Sheets in background
+            const payload = { ...newTx, action: 'addTransaction' };
+
             try {
-                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(tx) });
-                showToast('✅ Transaction ajoutée dans Google Sheets !');
-                closeModal();
-                // Recharger pour être sûr d'avoir les données à jour
-                loadData();
+                // On n'attend pas forcément la réponse pour l'expérience utilisateur, 
+                // mais on gère le silence du mode 'no-cors'
+                fetch(SHEETS_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+
+                // Petit délai pour simuler une confirmation si nécessaire, 
+                // mais l'utilisateur a déjà repris la main
             } catch (err) {
-                showToast('❌ Erreur réseau. Réessayez.', true);
-            } finally {
-                btn.disabled = false; icon.textContent = '✅'; lbl.textContent = 'Enregistrer dans Google Sheets';
+                console.error("Erreur sync:", err);
+                showToast('⚠️ Erreur de synchronisation, mais conservé localement.', true);
             }
         }
 

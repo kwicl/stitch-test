@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <title>Smart Expenses — Analyse</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -19,6 +19,14 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            touch-action: pan-y;
+        }
+
+        html {
+            overflow-x: hidden;
+            height: 100%;
         }
 
         .material-symbols-outlined {
@@ -42,10 +50,27 @@
         <section class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
             <h3 class="text-sm font-bold text-primary/70 uppercase tracking-widest mb-4 text-center">Répartition des
                 dépenses</h3>
-            <div style="position:relative;height:250px;">
+            <div style="position:relative;height:220px;">
                 <canvas id="category-donut"></canvas>
             </div>
             <div id="category-legend" class="mt-4 grid grid-cols-2 gap-2 text-[10px]"></div>
+        </section>
+
+        <!-- BAR CHART (Evolution Mensuelle) -->
+        <section class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+            <h3 class="text-sm font-bold text-primary/70 uppercase tracking-widest mb-4 text-center">Évolution Mensuelle
+            </h3>
+            <div style="position:relative;height:250px;">
+                <canvas id="monthly-bar-chart"></canvas>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+                <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-primary"></span><span
+                        class="text-[10px] text-slate-400">Revenus</span></div>
+                <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-red-400"></span><span
+                        class="text-[10px] text-slate-400">Dépenses</span></div>
+                <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-400"></span><span
+                        class="text-[10px] text-slate-400">Épargne</span></div>
+            </div>
         </section>
 
         <!-- TOP DEPENSES -->
@@ -136,6 +161,7 @@
                 const data = await res.json();
                 if (data.success) {
                     renderAnalyse(data.data);
+                    renderMonthlyChart(data.data);
                 }
             } catch (e) {
                 console.error(e);
@@ -185,15 +211,15 @@
             legend.innerHTML = sorted.slice(0, 8).map((s, i) => `
     <div class="flex items-center gap-1.5 truncate">
       <span class="size-2 rounded-full" style="background:${colors[i % colors.length]}"></span>
-      <span class="text-slate-400">${s[0]}:</span>
-      <span class="font-bold">${Math.round(s[1] / totalDep * 100)}%</span>
+      <span class="text-slate-400 text-[9px]">${s[0]}:</span>
+      <span class="font-bold text-[9px]">${Math.round(s[1] / (totalDep || 1) * 100)}%</span>
     </div>
   `).join('');
 
             // List
             const list = document.getElementById('category-list');
             list.innerHTML = sorted.map((s, i) => {
-                const pct = Math.round(s[1] / totalDep * 100);
+                const pct = Math.round(s[1] / (totalDep || 1) * 100);
                 return `
       <div class="bg-primary/5 border border-primary/10 rounded-xl p-4">
         <div class="flex justify-between items-center mb-2">
@@ -207,6 +233,48 @@
       </div>
     `;
             }).join('');
+        }
+
+        function renderMonthlyChart(tx) {
+            const months = {};
+            tx.forEach(t => {
+                const d = parseDt(t.date);
+                if (!d) return;
+                const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (!months[k]) months[k] = { rev: 0, dep: 0 };
+                const a = getVal(t);
+                if (isRev(t)) months[k].rev += a;
+                else months[k].dep += a;
+            });
+
+            const keys = Object.keys(months).sort().slice(-6); // 6 derniers mois
+            const labels = keys.map(k => {
+                const [y, m] = k.split('-');
+                return new Date(y, m - 1).toLocaleDateString('fr-FR', { month: 'short' });
+            });
+            const revData = keys.map(k => months[k].rev);
+            const depData = keys.map(k => months[k].dep);
+            const savData = keys.map(k => months[k].rev - months[k].dep);
+
+            new Chart(document.getElementById('monthly-bar-chart'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Revenus', data: revData, backgroundColor: '#a1e633', borderRadius: 4 },
+                        { label: 'Dépenses', data: depData, backgroundColor: '#f87171', borderRadius: 4 },
+                        { label: 'Épargne', data: savData, backgroundColor: '#60a5fa', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(161,230,51,0.05)' }, ticks: { color: '#64748b', font: { size: 9 }, callback: v => v >= 1000 ? (v / 1000) + 'k' : v } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
         }
 
         window.onload = loadData;

@@ -3,9 +3,10 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <title>Smart Expenses — Budgets</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -18,6 +19,14 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            touch-action: pan-y;
+        }
+
+        html {
+            overflow-x: hidden;
+            height: 100%;
         }
 
         .material-symbols-outlined {
@@ -59,6 +68,50 @@
         <div id="budget-list" class="space-y-6">
             <div class="p-8 text-center text-slate-500 italic">Analyse de vos habitudes...</div>
         </div>
+
+        <!-- RECOMMANDATIONS D'ÉPARGNE -->
+        <section class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="material-symbols-outlined text-blue-400">lightbulb</span>
+                <h3 class="text-base font-bold text-blue-400">Conseils d'Épargne 2026</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="flex gap-3">
+                    <div class="mt-1 size-5 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold">1</span>
+                    </div>
+                    <p class="text-xs text-slate-300"><strong class="text-white">Règle du 50/30/20 :</strong> Allouez
+                        50%
+                        à vos besoins, 30% à vos envies et <span class="bg-blue-500/20 text-blue-400 px-1 rounded">20% à
+                            l'épargne</span>. C'est le standard d'or pour la liberté financière.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="mt-1 size-5 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold">2</span>
+                    </div>
+                    <p class="text-xs text-slate-300"><strong class="text-white">Épargne de précaution :</strong> Visez
+                        3
+                        à 6 mois de salaire sur un compte liquide comme un Livret A pour les imprévus.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="mt-1 size-5 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold">3</span>
+                    </div>
+                    <p class="text-xs text-slate-300"><strong class="text-white">Automatisation :</strong> Programmez un
+                        virement automatique vers votre épargne le jour de votre salaire : <span
+                            class="italic">"Payez-vous d'abord"</span>.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRAPHE DE GESTION -->
+        <section class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+            <h3 class="text-sm font-bold text-primary/70 uppercase tracking-widest mb-4 text-center">Gestion des Budgets
+                par Période</h3>
+            <div style="position:relative;height:200px;">
+                <canvas id="budget-management-chart"></canvas>
+            </div>
+        </section>
 
     </main>
 
@@ -140,6 +193,7 @@
                 const data = await res.json();
                 if (data.success) {
                     renderBudgets(data.data);
+                    renderBudgetChart(data.data);
                 }
             } catch (e) {
                 console.error(e);
@@ -167,8 +221,6 @@
                 }
             });
 
-            // Budget global estimé (on prend 20% de plus que la moyenne ou un palier fixe)
-            // Pour la démo, on utilise un budget cible fictif basé sur les données
             const targetBudget = totalSpentMonth > 5000 ? totalSpentMonth * 1.2 : 10000;
             const globalPct = Math.min(100, Math.round((totalSpentMonth / targetBudget) * 100));
 
@@ -185,7 +237,6 @@
             const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
 
             list.innerHTML = sorted.map(([name, amount]) => {
-                // Calcul d'un budget par catégorie (exemple: 10% au dessus du montant actuel pour simuler une limite)
                 const catLimit = amount * 1.25;
                 const pct = Math.min(100, Math.round((amount / catLimit) * 100));
                 let color = 'bg-primary';
@@ -217,6 +268,50 @@
       </div>
     `;
             }).join('');
+        }
+
+        function renderBudgetChart(tx) {
+            const months = {};
+            tx.forEach(t => {
+                const d = parseDt(t.date);
+                if (!d) return;
+                const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (!months[k]) months[k] = { budget: 10000, spent: 0 };
+                const a = getVal(t);
+                if (!isRev(t)) months[k].spent += a;
+            });
+
+            const keys = Object.keys(months).sort().slice(-6);
+            const labels = keys.map(k => {
+                const [y, m] = k.split('-');
+                return new Date(y, m - 1).toLocaleDateString('fr-FR', { month: 'short' });
+            });
+            const spentData = keys.map(k => months[k].spent);
+
+            new Chart(document.getElementById('budget-management-chart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Dépenses réelles',
+                        data: spentData,
+                        borderColor: '#a1e633',
+                        backgroundColor: 'rgba(161,230,51,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: true, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { display: true, ticks: { display: false } }
+                    }
+                }
+            });
         }
 
         window.onload = loadData;

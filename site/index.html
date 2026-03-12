@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
   <title>Dashboard Principal — Preview</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      overflow-x: hidden;
+      width: 100%;
+    }
 
     :root {
       --bg: #0f0f14;
@@ -43,14 +56,22 @@
     }
 
     .logo {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 18px;
     }
 
-    header h1 { font-size: 16px; font-weight: 600; flex: 1; }
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+    }
+
     header .badge {
       font-size: 11px;
       background: var(--accent2);
@@ -71,10 +92,15 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
-    .tabs::-webkit-scrollbar { display: none; }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
 
     .tab {
-      display: flex; align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 8px 18px;
       border-radius: 999px;
       border: 1px solid var(--border);
@@ -87,13 +113,21 @@
       transition: all .2s ease;
       text-decoration: none;
     }
-    .tab:hover { border-color: var(--accent); color: var(--text); }
+
+    .tab:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
     .tab.active {
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
     }
-    .tab .icon { font-size: 15px; }
+
+    .tab .icon {
+      font-size: 15px;
+    }
 
     /* ── MAIN LAYOUT ────────────────────────────── */
     .content {
@@ -121,8 +155,8 @@
       box-shadow:
         0 0 0 10px #1a1a24,
         0 0 0 12px #2a2a3a,
-        0 40px 80px rgba(0,0,0,.6),
-        0 0 60px rgba(46,204,112,.08);
+        0 40px 80px rgba(0, 0, 0, .6),
+        0 0 60px rgba(46, 204, 112, .08);
       overflow: hidden;
       position: relative;
       border: 1px solid #333;
@@ -132,8 +166,11 @@
     .phone-frame::before {
       content: '';
       position: absolute;
-      top: 0; left: 50%; transform: translateX(-50%);
-      width: 126px; height: 34px;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 34px;
       background: #111118;
       border-radius: 0 0 22px 22px;
       z-index: 10;
@@ -152,6 +189,7 @@
       display: flex;
       gap: 10px;
     }
+
     .ctrl-btn {
       padding: 8px 20px;
       border-radius: 999px;
@@ -162,9 +200,15 @@
       font-weight: 500;
       cursor: pointer;
       transition: all .2s;
-      display: flex; align-items: center; gap: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .ctrl-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .ctrl-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
 
     /* ── INFO PANEL ─────────────────────────────── */
     .info-panel {
@@ -178,10 +222,34 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-    .info-item { display: flex; flex-direction: column; gap: 2px; }
-    .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-    .info-value { font-size: 13px; font-weight: 600; color: var(--text); }
-    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 5px; }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .info-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .info-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 5px;
+    }
 
     /* ── FOOTER ─────────────────────────────────── */
     footer {
@@ -191,9 +259,14 @@
       color: var(--muted);
       border-top: 1px solid var(--border);
     }
-    footer a { color: var(--accent); text-decoration: none; }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -225,7 +298,8 @@
       </div>
 
       <div class="phone-controls">
-        <button class="ctrl-btn" onclick="document.getElementById('preview-frame').src = document.getElementById('preview-frame').src">
+        <button class="ctrl-btn"
+          onclick="document.getElementById('preview-frame').src = document.getElementById('preview-frame').src">
           🔄 Recharger
         </button>
         <button class="ctrl-btn" onclick="openInNewTab()">
@@ -247,7 +321,8 @@
         </div>
         <div class="info-item">
           <span class="info-label">Projet Stitch</span>
-          <span class="info-value"><a href="https://stitch.withgoogle.com/projects/4105782733511474357" target="_blank" style="color:var(--accent)">4105782733511474357</a></span>
+          <span class="info-value"><a href="https://stitch.withgoogle.com/projects/4105782733511474357" target="_blank"
+              style="color:var(--accent)">4105782733511474357</a></span>
         </div>
         <div class="info-item">
           <span class="info-label">Statut</span>
@@ -265,10 +340,10 @@
 
   <script>
     const screens = {
-      dashboard:    { file: 'dashboard.html',    label: 'Dashboard Sombre' },
-      budgets:      { file: 'budgets.html',       label: 'Budgets Sombres' },
-      analyse:      { file: 'analyse.html',       label: 'Analyse Sombre' },
-      transactions: { file: 'transactions.html',  label: 'Transactions Sombres' },
+      dashboard: { file: 'dashboard.html', label: 'Dashboard Sombre' },
+      budgets: { file: 'budgets.html', label: 'Budgets Sombres' },
+      analyse: { file: 'analyse.html', label: 'Analyse Sombre' },
+      transactions: { file: 'transactions.html', label: 'Transactions Sombres' },
     };
 
     let currentFile = 'dashboard.html';
@@ -296,4 +371,5 @@
   </script>
 
 </body>
+
 </html>
