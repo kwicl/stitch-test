@@ -175,6 +175,7 @@
             background-color: #800020 !important;
             color: white !important;
             transition: all 0.2s;
+            animation: glow-bordeaux 2s infinite alternate;
         }
 
         #submit-btn:active {
@@ -187,6 +188,17 @@
             background-color: #800020 !important;
             color: white !important;
             box-shadow: 0 8px 20px rgba(128, 0, 32, 0.4);
+            animation: glow-bordeaux 2s infinite alternate;
+        }
+
+        @keyframes glow-bordeaux {
+            0% {
+                box-shadow: 0 8px 20px rgba(128, 0, 32, 0.4), 0 0 5px rgba(128, 0, 32, 0.1);
+            }
+
+            100% {
+                box-shadow: 0 8px 20px rgba(128, 0, 32, 0.5), 0 0 20px rgba(128, 0, 32, 0.8), 0 0 40px rgba(128, 0, 32, 0.4);
+            }
         }
     </style>
 </head>
@@ -292,6 +304,17 @@
                 </div>
                 <p id="chart-empty" class="hidden text-center py-8 text-slate-500 text-sm">Aucune donnée pour cette
                     période</p>
+            </div>
+        </section>
+
+        <!-- BAR CHART (HISTOGRAM) -->
+        <section class="px-4 pb-6">
+            <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par
+                    catégorie</p>
+                <div style="position:relative; min-height:200px;">
+                    <canvas id="category-chart"></canvas>
+                </div>
             </div>
         </section>
 
@@ -424,6 +447,7 @@
         let allTx = [];
         let period = 'mois';
         let chart = null;
+        let barChart = null;
 
         // ═══════════════════════════════════════════════
         // UTILS
@@ -607,6 +631,75 @@
             });
         }
 
+        function updateCategoryChart(tx) {
+            const canvas = document.getElementById('category-chart');
+            if (!tx.length) {
+                if (barChart) { barChart.destroy(); barChart = null; }
+                return;
+            }
+
+            const expenses = tx.filter(t => !isRev(t));
+            const catTotals = {};
+            expenses.forEach(t => {
+                const cat = t.categorie || 'Autre';
+                catTotals[cat] = (catTotals[cat] || 0) + getVal(t);
+            });
+
+            // On garde le top 7 pour la lisibilité sur mobile
+            const sortedCats = Object.entries(catTotals)
+                .filter(c => c[1] > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 7);
+
+            if (sortedCats.length === 0) {
+                if (barChart) { barChart.destroy(); barChart = null; }
+                return;
+            }
+
+            const labels = sortedCats.map(c => c[0]);
+            const data = sortedCats.map(c => c[1]);
+
+            if (barChart) barChart.destroy();
+            barChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Dépenses',
+                        data: data,
+                        backgroundColor: 'rgba(56, 189, 248, 0.4)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    indexAxis: 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: c => fmtDH(c.parsed.y) } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#f8fafc', font: { size: 9 }, maxRotation: 45, minRotation: 45 },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#64748b',
+                                font: { size: 9 },
+                                callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
         // ═══════════════════════════════════════════════
         // TRANSACTION LIST
         // ═══════════════════════════════════════════════
@@ -696,6 +789,7 @@
             const tx = getFiltered();
             updateStats(tx);
             updateChart(tx);
+            updateCategoryChart(tx);
             updateTxList(tx);
         }
 
