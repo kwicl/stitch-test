@@ -9,8 +9,7 @@
     <script src="assets/tailwind.js"></script>
     <script src="assets/chart.umd.min.js"></script>
     <link href="assets/inter.css" rel="stylesheet" />
-    <link href="assets/material.css"
-        rel="stylesheet" />
+    <link href="assets/material.css" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -392,7 +391,8 @@
                     Catégorie</label>
                 <select id="f-categorie">
                     <option value="">Choisir une catégorie…</option>
-                    <option>Alimentation</option>
+                    <option style="font-weight: 900; color: #4CAF50; background-color: #E8F5E9;">🍎 Alimentation
+                    </option>
                     <option style="font-weight: 900; color: #ff5722; background-color: #fff3e0;">☕ Café</option>
                     <option>Transport</option>
                     <option>Déplacement</option>
@@ -402,8 +402,7 @@
                     <option>Maison et frais de service</option>
                     <option>Électroménagers</option>
                     <option>Éducation enfant</option>
-                    <option style="font-weight: 900; color: #e91e63; background-color: #fce4ec;">👕 vetements enfants
-                    </option>
+                    <option>vetements enfants</option>
                     <option>Appartement</option>
                     <option>appartement KENITRA</option>
                     <option>appartement CASA</option>
@@ -665,6 +664,34 @@
             const labels = sortedCats.map(c => c[0]);
             const data = sortedCats.map(c => c[1]);
 
+            const drawValuesPlugin = {
+                id: 'drawValues',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const val = dataset.data[index];
+                                if (val === 0) return;
+                                const text = (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
+                                ctx.font = 'bold 10px Inter';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                // Si la barre est assez grande, on met le texte à l'intérieur
+                                if (element.base - element.y > 20) {
+                                    ctx.fillStyle = '#1b2111'; // foncé
+                                    ctx.fillText(text, element.x, element.y + 12);
+                                } else {
+                                    ctx.fillStyle = '#a1e633'; // lime si ça sort
+                                    ctx.fillText(text, element.x, element.y - 8);
+                                }
+                            });
+                        }
+                    });
+                }
+            };
+
             if (barChart) barChart.destroy();
             barChart = new Chart(canvas, {
                 type: 'bar',
@@ -673,17 +700,19 @@
                     datasets: [{
                         label: 'Dépenses',
                         data: data,
-                        backgroundColor: 'rgba(56, 189, 248, 0.4)',
-                        borderColor: '#38bdf8',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                        barThickness: 20
+                        backgroundColor: 'rgba(161, 230, 51, 0.4)', // Lime translucide
+                        borderColor: '#a1e633', // Lime vif
+                        borderWidth: 1.5,
+                        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
+                        barThickness: 28,
+                        borderSkipped: false
                     }]
                 },
                 options: {
                     indexAxis: 'x',
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
                     plugins: {
                         legend: { display: false },
                         tooltip: { callbacks: { label: c => fmtDH(c.parsed.y) } }
@@ -691,18 +720,16 @@
                     scales: {
                         x: {
                             ticks: { color: '#f8fafc', font: { size: 9 }, maxRotation: 45, minRotation: 45 },
-                            grid: { display: false }
+                            grid: { display: false },
+                            border: { display: false }
                         },
                         y: {
-                            ticks: {
-                                color: '#64748b',
-                                font: { size: 9 },
-                                callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v
-                            },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
+                            display: false,
+                            min: 0
                         }
                     }
-                }
+                },
+                plugins: [drawValuesPlugin]
             });
         }
 
