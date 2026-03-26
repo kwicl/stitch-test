@@ -1,114 +1,106 @@
 // ============================================================
-// Smart Expenses — Google Apps Script API
-// ⚠️  CE CODE VA DANS : Google Sheets > Extensions > Apps Script
+// SMART EXPENSES — Google Apps Script
+// Copiez-collez ce code dans votre Apps Script Google
+// puis cliquez sur "Déployer" → "Gérer les déploiements"
+// → sélectionnez votre déploiement → Modifier → Nouvelle version
 // ============================================================
 
-// ⚠️ IMPORTANT : Changez "Feuille 1" par le nom exact de votre feuille
-// (regardez l'onglet en bas de votre Google Sheet)
-const SHEET_NAME = "Feuille 1";
-
-// ── Ces 2 fonctions sont requises par Google ──────────────────
 function doGet(e) {
-    return handleRequest(e);
+  var action = e.parameter.action;
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  if (action === 'getAll') {
+    return getAllTransactions(sheet);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: false, error: 'Action inconnue' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
-    return handleRequest(e);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+    if (data.action === 'addTransaction') {
+      return addTransaction(sheet, data);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: 'Action inconnue' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
-// ── Routeur principal ─────────────────────────────────────────
-function handleRequest(e) {
-    try {
-        let action = "";
-        let body = {};
+function addTransaction(sheet, data) {
+  // Générer un ID unique
+  var id = Utilities.getUuid();
 
-        // Détecter si c'est un GET ou POST
-        if (e.parameter && e.parameter.action) {
-            action = e.parameter.action;
-        } else if (e.postData && e.postData.contents) {
-            body = JSON.parse(e.postData.contents);
-            action = body.action;
-        }
+  // ✅ La sous-catégorie remplace le moyen de paiement (colonne F)
+  // On accepte les deux noms de champs pour la compatibilité
+  var sousCat = data.sous_categorie || data.paiement || '';
 
-        if (action === "addTransaction") {
-            return addTransaction(body);
-        } else if (action === "getAll") {
-            return getAllTransactions();
-        } else {
-            return respond({ error: "Action inconnue: " + action });
-        }
+  // ✅ Routage correct des montants :
+  // - Dépense → colonne C (montant)
+  // - Revenu  → colonne D (income)
+  var montant = data.montant !== '' && data.montant != null ? data.montant : '';
+  var income  = data.income  !== '' && data.income  != null ? data.income  : '';
 
-    } catch (err) {
-        return respond({ error: err.toString() });
-    }
+  // Construire la ligne dans l'ordre exact des colonnes du sheet :
+  // A: ID | B: Date | C: Montant dépensé | D: Income | E: Catégorie | F: Sous-catégorie | G: Description
+  var row = [
+    id,                          // A — ID
+    data.date || '',             // B — Date
+    montant,                     // C — Montant dépensé (vide si revenu)
+    income,                      // D — Income / Revenu (vide si dépense)
+    data.categorie || '',        // E — Catégorie
+    sousCat,                     // F — Sous-catégorie ← (anciennement Moyen de paiement)
+    (data.lieu || '') + (data.lieu && data.description ? ' — ' : '') + (data.description || '')  // G — Description
+  ];
+
+  sheet.appendRow(row);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true, id: id }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── AJOUTER une transaction ───────────────────────────────────
-function addTransaction(data) {
-    const sheet = SpreadsheetApp
-        .getActiveSpreadsheet()
-        .getSheetByName(SHEET_NAME);
+function getAllTransactions(sheet) {
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var rows = data.slice(1);
 
-    if (!sheet) {
-        return respond({ error: "Feuille introuvable: " + SHEET_NAME });
-    }
-
-    // Créer un ID unique
-    const id = Utilities.getUuid();
-
-    // Récupérer les données envoyées depuis l'app
-    const date = data.date || new Date().toLocaleDateString("fr-FR");
-    const montant = data.montant || 0;
-    const income = data.income || "";
-    const categorie = data.categorie || "";
-    const paiement = data.paiement || "Espèces";
-    const desc = data.description || "";
-    const lieu = data.lieu || "";
-
-    // Ajouter une ligne dans Google Sheets
-    // Ordre des colonnes : ID | Date | Montant | Income | Catégorie | Paiement | Description | Lieu
-    sheet.appendRow([id, date, montant, income, categorie, paiement, desc, lieu]);
-
-    return respond({ success: true, message: "Transaction ajoutée !", id: id });
-}
-
-// ── LIRE toutes les transactions ──────────────────────────────
-function getAllTransactions() {
-    const sheet = SpreadsheetApp
-        .getActiveSpreadsheet()
-        .getSheetByName(SHEET_NAME);
-
-    if (!sheet) {
-        return respond({ error: "Feuille introuvable: " + SHEET_NAME });
-    }
-
-    const allData = sheet.getDataRange().getValues();
-
-    // S'il n'y a que l'en-tête ou rien
-    if (allData.length <= 1) {
-        return respond({ success: true, data: [] });
-    }
-
-    // Transformer chaque ligne en objet JSON
-    const transactions = allData.slice(1).map(function (row) {
-        return {
-            id: row[0],
-            date: row[1],
-            montant: row[2],
-            income: row[3],
-            categorie: row[4],
-            paiement: row[5],
-            description: row[6],
-            lieu: row[7]
-        };
+  var result = rows.map(function(row) {
+    var obj = {};
+    headers.forEach(function(h, i) {
+      obj[String(h).toLowerCase().trim()] = row[i];
     });
 
-    return respond({ success: true, data: transactions });
-}
+    // Normaliser les noms de champs pour l'app
+    return {
+      id:             obj['id'] || '',
+      date:           obj['date'] || '',
+      montant:        obj['quel est le montant dépensé?'] || obj['montant'] || '',
+      income:         obj['income'] || '',
+      categorie:      obj['quelle est la catégorie de la dépense?'] || obj['catégorie'] || obj['categorie'] || '',
+      // ✅ Lire sous_categorie depuis colonne F (anciennement moyen de paiement)
+      sous_categorie: obj['sous-catégorie de dépense'] || obj['quel moyen de paiement a été utilisé?'] || obj['sous_categorie'] || obj['paiement'] || '',
+      paiement:       obj['sous-catégorie de dépense'] || obj['quel moyen de paiement a été utilisé?'] || obj['sous_categorie'] || obj['paiement'] || '',
+      description:    obj['description lieu ou note'] || obj['description'] || obj['lieu'] || '',
+      lieu:           obj['description lieu ou note'] || obj['lieu'] || '',
+    };
+  }).filter(function(t) {
+    // Filtrer les lignes vides
+    return t.date || t.montant || t.income;
+  });
 
-// ── Fonction utilitaire pour renvoyer du JSON ─────────────────
-function respond(data) {
-    return ContentService
-        .createTextOutput(JSON.stringify(data))
-        .setMimeType(ContentService.MimeType.JSON);
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true, data: result }))
+    .setMimeType(ContentService.MimeType.JSON);
 }

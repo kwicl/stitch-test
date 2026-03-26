@@ -368,8 +368,12 @@
         <div id="modal-box">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold">➕ Nouvelle transaction</h2>
-                <button onclick="closeModal()"
-                    class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openCatManager()" title="Gérer catégories"
+                        class="text-slate-400 hover:text-primary transition-colors text-sm px-2 py-1 rounded-lg border border-primary/20 bg-primary/5">⚙️ Catégories</button>
+                    <button onclick="closeModal()"
+                        class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                </div>
             </div>
             <div class="flex items-center gap-2 mb-4 text-xs text-slate-400">
                 <span id="modal-dot"
@@ -383,47 +387,20 @@
                     (DH)</label>
                 <input type="number" id="f-montant" placeholder="Ex: 150" step="0.01" min="0" required />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📌 Type</label>
-                <select id="f-income">
+                <select id="f-income" onchange="onTypeChange()">
                     <option value="">💸 Dépense</option>
                     <option value="Revenu">💰 Revenu</option>
                 </select>
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️
                     Catégorie</label>
-                <select id="f-categorie">
+                <select id="f-categorie" onchange="onCatChange()">
                     <option value="">Choisir une catégorie…</option>
-                    <option style="font-weight: 900; color: #4CAF50; background-color: #E8F5E9;" value="Alimentation">
-                        Alimentation</option>
-                    <option style="font-weight: 900; color: #ff5722; background-color: #fff3e0;" value="Café">Café
-                    </option>
-                    <option>Transport</option>
-                    <option>Déplacement</option>
-                    <option>Santé</option>
-                    <option>Voyages</option>
-                    <option>Bien-être</option>
-                    <option>Maison et frais de service</option>
-                    <option>Électroménagers</option>
-                    <option>Éducation enfant</option>
-                    <option>vetements enfants</option>
-                    <option>Appartement</option>
-                    <option>appartement KENITRA</option>
-                    <option>appartement CASA</option>
-                    <option>villa tamesna</option>
-                    <option>investissement LOT SAHEL icl</option>
-                    <option>INVESTISSEMENT</option>
-                    <option>Loisirs</option>
-                    <option>Salaire</option>
-                    <option>Autres revenus</option>
-                    <option>Autre</option>
                 </select>
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💳
-                    Paiement</label>
-                <select id="f-paiement">
-                    <option>Espèces</option>
-                    <option>Virement</option>
-                    <option>Mobile</option>
-                    <option>Chèque</option>
-                    <option>Carte bancaire</option>
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🔖 Sous-catégorie</label>
+                <select id="f-sous-cat">
+                    <option value="">Choisir une sous-catégorie…</option>
                 </select>
+                <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu</label>
                 <input type="text" id="f-lieu" placeholder="Ex: Marché central…" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝
@@ -438,6 +415,25 @@
         </div>
     </div>
 
+    <!-- CATEGORIES MANAGER MODAL -->
+    <div id="cat-manager-overlay" onclick="if(event.target===this)closeCatManager()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1100;backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;">
+        <div id="cat-manager-box" style="width:100%;max-width:430px;background:#1b2111;border-radius:24px 24px 0 0;padding:24px 20px 40px;border-top:1px solid rgba(161,230,51,.25);max-height:92vh;overflow-y:auto;animation:slideUp .3s ease;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h2 style="font-size:17px;font-weight:700;">⚙️ Gérer les catégories</h2>
+                <button onclick="closeCatManager()" style="color:#64748b;font-size:24px;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+            </div>
+            <p style="font-size:11px;color:#64748b;margin-bottom:16px;">Modifiez les noms et les sous-catégories. Les changements sont sauvegardés localement.</p>
+
+            <!-- Add new category -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <input type="text" id="new-cat-input" placeholder="Nouvelle catégorie…" style="flex:1;background:rgba(161,230,51,.05);border:1px solid rgba(161,230,51,.2);border-radius:10px;color:#f1f5f9;padding:10px 14px;font-size:14px;font-family:Inter,sans-serif;outline:none;" />
+                <button onclick="addCategory()" style="background:#a1e633;color:#1b2111;font-weight:700;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:13px;">+ Ajouter</button>
+            </div>
+
+            <div id="cat-manager-list"></div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="toast"></div>
 
@@ -446,6 +442,96 @@
         // CONFIG — URL Apps Script
         // ═══════════════════════════════════════════════
         const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+
+        // ═══════════════════════════════════════════════
+        // CATEGORIES & SUBCATEGORIES (with localStorage persistence)
+        // ═══════════════════════════════════════════════
+        const DEFAULT_SUBCATEGORIES = {
+            'Alimentation': ['Épicerie', 'Restaurant', 'Boulangerie', 'Fruits & Légumes', 'Viande / Poisson', 'Snack', 'Autre'],
+            'Café': ['Café du matin', 'Café avec amis', 'Réunion café', 'Pause café', 'Autre'],
+            'Transport': ['Carburant', 'Taxi / VTC', 'Transport en commun', 'Parking', 'Péage', 'Autre'],
+            'Déplacement': ["Voyage d'affaires", 'Taxi', 'Train / Bus', 'Hébergement', 'Autre'],
+            'Santé': ['Pharmacie', 'Médecin', 'Dentiste', 'Analyses médicales', 'Optique', 'Autre'],
+            'Voyages': ['Hôtel', 'Vol / Train', 'Restauration', 'Activités', 'Shopping', 'Souvenirs', 'Autre'],
+            'Bien-être': ['Coiffeur', 'Spa / Massage', 'Salle de sport', 'Cosmétiques', 'Autre'],
+            'Maison et frais de service': ['Eau', 'Électricité', 'Internet / Téléphone', 'Loyer', 'Entretien', 'Assurance', 'Autre'],
+            'Électroménagers': ['Cuisine', 'Électronique', 'Mobilier', 'Décoration', 'Autre'],
+            'Éducation enfant': ['Fournitures scolaires', 'Frais de scolarité', 'Activités parascolaires', 'Livres', 'Autre'],
+            'vetements enfants': ['Vêtements été', 'Vêtements hiver', 'Chaussures', 'Uniforme scolaire', 'Autre'],
+            'Appartement': ['Loyer', 'Charges', 'Réparations', 'Ameublement', 'Autre'],
+            'appartement KENITRA': ['Loyer', 'Charges', 'Réparations', 'Autre'],
+            'appartement CASA': ['Loyer', 'Charges', 'Réparations', 'Autre'],
+            'villa tamesna': ['Charges', 'Entretien', 'Réparations', 'Jardinage', 'Autre'],
+            'investissement LOT SAHEL icl': ['Avance', 'Tranche', 'Frais notaire', 'Taxes', 'Autre'],
+            'INVESTISSEMENT': ['IPO Bourse', 'Capex IT', 'Immobilier', 'Bourse', 'Autre'],
+            'Loisirs': ['Cinéma', 'Sorties', 'Jeux', 'Shopping', 'Livres', 'Autre'],
+            'Salaire': ['Salaire mensuel', 'Prime', 'Bonus', 'Autre'],
+            'Autres revenus': ['Location', 'Dividendes', 'Remboursement', 'Cadeau', 'Autre'],
+            'Autre': ['Divers', 'Non classé', 'Autre'],
+        };
+
+        function loadCats() {
+            try {
+                const saved = localStorage.getItem('smartExpenses_cats');
+                return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_SUBCATEGORIES));
+            } catch { return JSON.parse(JSON.stringify(DEFAULT_SUBCATEGORIES)); }
+        }
+
+        function saveCats(cats) {
+            localStorage.setItem('smartExpenses_cats', JSON.stringify(cats));
+        }
+
+        let SUBCATEGORIES = loadCats();
+
+        function getCatList() { return Object.keys(SUBCATEGORIES); }
+
+        // Populate category dropdown
+        function populateCatSelect() {
+            const sel = document.getElementById('f-categorie');
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">Choisir une catégorie…</option>' +
+                getCatList().map(c => `<option value="${c}">${c}</option>`).join('');
+            if (currentVal) sel.value = currentVal;
+        }
+
+        // Populate sub-category dropdown based on selected category
+        function onCatChange() {
+            const cat = document.getElementById('f-categorie').value;
+            const subSel = document.getElementById('f-sous-cat');
+            const customInp = document.getElementById('f-sous-cat-custom');
+            const subs = SUBCATEGORIES[cat] || [];
+            subSel.innerHTML = '<option value="">Choisir une sous-catégorie…</option>' +
+                subs.map(s => `<option value="${s}">${s}</option>`).join('') +
+                '<option value="__custom__">✏️ Saisir manuellement…</option>';
+            subSel.style.display = 'block';
+            customInp.style.display = 'none';
+            customInp.value = '';
+        }
+
+        function onSubCatChange() {
+            const subSel = document.getElementById('f-sous-cat');
+            const customInp = document.getElementById('f-sous-cat-custom');
+            if (subSel.value === '__custom__') {
+                customInp.style.display = 'block';
+                customInp.focus();
+            } else {
+                customInp.style.display = 'none';
+            }
+        }
+
+        function getSelectedSubCat() {
+            const subSel = document.getElementById('f-sous-cat');
+            if (subSel.value === '__custom__') {
+                return document.getElementById('f-sous-cat-custom').value.trim();
+            }
+            return subSel.value;
+        }
+
+        // Show/hide category field based on type
+        function onTypeChange() {
+            populateCatSelect();
+            onCatChange();
+        }
 
         // ═══════════════════════════════════════════════
         // STATE
@@ -459,43 +545,30 @@
         // UTILS
         // ═══════════════════════════════════════════════
 
-        // Formattage robuste des montants (arrache les nombres de n'importe quel texte)
         function cleanAmount(v) {
             if (typeof v === 'number') return v;
             if (!v) return 0;
-            // Supprime tout sauf chiffres, point, virgule (transformée en point) et signe moins
             let s = String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
             return parseFloat(s) || 0;
         }
 
-        // Parsing de date ultra-robuste
         function parseDt(s) {
             if (!s) return null;
             let str = String(s).trim();
-
-            // 1. Gérer explicitement le format ISO ou date string native
-            // Si c'est déjà un objet Date (peu probable via JSON mais bon)
             if (s instanceof Date) return s;
-
-            // 2. Format Date(2025,10,22) de Google
             if (str.includes('Date(')) {
                 const m = str.match(/\d+/g);
                 if (m) return new Date(m[0], m[1], m[2]);
             }
-
-            // 3. Format JJ/MM/AAAA ou JJ-MM-AAAA (Très fréquent dans Sheets)
-            // On vérifie si le premier bloc est un jour (1-31) et non une année (20xx)
             const parts = str.split(/[/\- ]/);
             if (parts.length >= 3) {
                 if (parts[0].length === 2 || (parts[0].length === 1 && parts[2].length === 4)) {
-                    // Format DD/MM/YYYY
                     const d = parseInt(parts[0], 10);
                     const m = parseInt(parts[1], 10) - 1;
                     const y = parseInt(parts[2], 10);
                     const dt = new Date(y, m, d);
                     if (!isNaN(dt.getTime())) return dt;
                 } else if (parts[0].length === 4) {
-                    // Format YYYY-MM-DD
                     const y = parseInt(parts[0], 10);
                     const m = parseInt(parts[1], 10) - 1;
                     const d = parseInt(parts[2], 10);
@@ -503,11 +576,8 @@
                     if (!isNaN(dt.getTime())) return dt;
                 }
             }
-
-            // 4. Fallback natif
             let d = new Date(str);
             if (!isNaN(d.getTime())) return d;
-
             return null;
         }
 
@@ -516,15 +586,19 @@
         }
 
         function isRev(t) {
+            // Revenue: income column contains a non-zero number OR the label "Revenu"
             const incomeVal = String(t.income || "").trim().toLowerCase();
             return incomeVal !== "" && incomeVal !== "false" && incomeVal !== "0";
         }
 
         function getVal(t) {
-            const m = cleanAmount(t.montant);
-            const i = cleanAmount(t.income);
-            // Retourne le montant principal, sinon la valeur dans la colonne income
-            return m || i || 0;
+            if (isRev(t)) {
+                // Revenue: read from income column
+                return cleanAmount(t.income) || 0;
+            } else {
+                // Expense: read from montant column
+                return cleanAmount(t.montant) || 0;
+            }
         }
 
         function getLabel(t) {
@@ -781,7 +855,7 @@
                 const income = isRev(t);
                 const amount = getVal(t);
                 const label = getLabel(t);
-                const sub = t.lieu || t.description || (income ? 'Entrée' : 'Sortie');
+                const sub = t.sous_categorie || t.paiement || t.lieu || t.description || (income ? 'Entrée' : 'Sortie');
                 const d = parseDt(t.date);
                 const ds = d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : String(t.date);
                 return `<div class="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl">
@@ -902,49 +976,56 @@
         function openModal() {
             document.getElementById('modal-overlay').classList.add('open');
             document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+            populateCatSelect();
+            onCatChange();
         }
         function closeModal() {
             document.getElementById('modal-overlay').classList.remove('open');
             document.getElementById('tx-form').reset();
+            document.getElementById('f-sous-cat-custom').style.display = 'none';
         }
         function overlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
         async function submitTx(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn'), icon = document.getElementById('submit-icon'), lbl = document.getElementById('submit-label');
-            const originalIcon = icon.textContent, originalLabel = lbl.textContent;
+
+            const isRevenu = document.getElementById('f-income').value === 'Revenu';
+            const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
+            const sousCat = getSelectedSubCat();
 
             const newTx = {
                 date: document.getElementById('f-date').value,
-                montant: parseFloat(document.getElementById('f-montant').value),
-                income: document.getElementById('f-income').value,
+                // ✅ CORRECT COLUMN ROUTING: revenue → income col, expense → montant col
+                montant: isRevenu ? '' : montantVal,
+                income: isRevenu ? montantVal : '',
                 categorie: document.getElementById('f-categorie').value,
-                paiement: document.getElementById('f-paiement').value,
+                sous_categorie: sousCat,
                 lieu: document.getElementById('f-lieu').value,
                 description: document.getElementById('f-desc').value,
-                index: allTx.length // Pour le tri
+                index: allTx.length
             };
 
-            // OPTIMISTIC UI: Update local state and UI immediately
+            // OPTIMISTIC UI
             allTx.push(newTx);
             refresh();
             closeModal();
             showToast('⚡ Validation rapide... Enregistrement en arrière-plan.');
 
-            // Send to Google Sheets in background
-            const payload = { ...newTx, action: 'addTransaction' };
+            // ✅ Map sous_categorie → paiement so the Apps Script writes it
+            // to the correct column F (formerly "Quel moyen de paiement")
+            const payload = {
+                ...newTx,
+                paiement: sousCat,   // column F in Google Sheet
+                action: 'addTransaction'
+            };
 
             try {
-                // On n'attend pas forcément la réponse pour l'expérience utilisateur, 
-                // mais on gère le silence du mode 'no-cors'
                 fetch(SHEETS_API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-
-                // Petit délai pour simuler une confirmation si nécessaire, 
-                // mais l'utilisateur a déjà repris la main
             } catch (err) {
                 console.error("Erreur sync:", err);
                 showToast('⚠️ Erreur de synchronisation, mais conservé localement.', true);
@@ -963,9 +1044,121 @@
         }
 
         // ═══════════════════════════════════════════════
+        // CATEGORIES MANAGER
+        // ═══════════════════════════════════════════════
+        function openCatManager() {
+            renderCatManager();
+            const overlay = document.getElementById('cat-manager-overlay');
+            overlay.style.display = 'flex';
+        }
+
+        function closeCatManager() {
+            document.getElementById('cat-manager-overlay').style.display = 'none';
+            SUBCATEGORIES = loadCats();
+            populateCatSelect();
+        }
+
+        function addCategory() {
+            const input = document.getElementById('new-cat-input');
+            const name = input.value.trim();
+            if (!name) return;
+            SUBCATEGORIES[name] = ['Autre'];
+            saveCats(SUBCATEGORIES);
+            input.value = '';
+            renderCatManager();
+        }
+
+        function deleteCategory(cat) {
+            if (!confirm(`Supprimer la catégorie "${cat}" ?`)) return;
+            delete SUBCATEGORIES[cat];
+            saveCats(SUBCATEGORIES);
+            renderCatManager();
+        }
+
+        function renameCat(oldName, newName) {
+            if (!newName || newName === oldName) return;
+            if (SUBCATEGORIES[newName]) { alert('Cette catégorie existe déjà.'); return; }
+            SUBCATEGORIES[newName] = SUBCATEGORIES[oldName];
+            delete SUBCATEGORIES[oldName];
+            saveCats(SUBCATEGORIES);
+            renderCatManager();
+        }
+
+        function addSubCat(cat) {
+            const input = document.getElementById(`new-sub-${CSS.escape(cat)}`);
+            const val = input ? input.value.trim() : '';
+            if (!val) return;
+            if (!SUBCATEGORIES[cat]) SUBCATEGORIES[cat] = [];
+            SUBCATEGORIES[cat].push(val);
+            saveCats(SUBCATEGORIES);
+            input.value = '';
+            renderCatManager();
+        }
+
+        function deleteSubCat(cat, idx) {
+            SUBCATEGORIES[cat].splice(idx, 1);
+            saveCats(SUBCATEGORIES);
+            renderCatManager();
+        }
+
+        function renameSubCat(cat, idx, newVal) {
+            if (!newVal) return;
+            SUBCATEGORIES[cat][idx] = newVal;
+            saveCats(SUBCATEGORIES);
+        }
+
+        function renderCatManager() {
+            const container = document.getElementById('cat-manager-list');
+            const cats = Object.keys(SUBCATEGORIES);
+            container.innerHTML = cats.map(cat => {
+                const subs = SUBCATEGORIES[cat] || [];
+                const safeId = cat.replace(/[^a-zA-Z0-9]/g, '_');
+                return `
+                <div style="background:rgba(161,230,51,.04);border:1px solid rgba(161,230,51,.12);border-radius:14px;padding:14px;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <input type="text" value="${cat.replace(/"/g,'&quot;')}" id="cat-name-${safeId}"
+                            style="flex:1;background:rgba(161,230,51,.08);border:1px solid rgba(161,230,51,.2);border-radius:8px;color:#f1f5f9;padding:7px 10px;font-size:13px;font-family:Inter,sans-serif;outline:none;"
+                            onblur="renameCat('${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', this.value)" />
+                        <button onclick="deleteCategory('${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" style="background:rgba(239,68,68,.15);color:#f87171;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;">🗑️</button>
+                    </div>
+                    <div style="margin-left:8px;">
+                        ${subs.map((s, i) => `
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                            <span style="color:#64748b;font-size:12px;">•</span>
+                            <input type="text" value="${s.replace(/"/g,'&quot;')}" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:#cbd5e1;padding:5px 9px;font-size:12px;font-family:Inter,sans-serif;outline:none;"
+                                onblur="renameSubCat('${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', ${i}, this.value)" />
+                            <button onclick="deleteSubCat('${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', ${i})" style="background:none;color:#64748b;border:none;cursor:pointer;font-size:14px;padding:0 4px;">✕</button>
+                        </div>`).join('')}
+                        <div style="display:flex;gap:6px;margin-top:6px;">
+                            <input type="text" id="new-sub-${safeId}" placeholder="+ Nouvelle sous-catégorie…"
+                                style="flex:1;background:rgba(161,230,51,.03);border:1px dashed rgba(161,230,51,.2);border-radius:7px;color:#a0aec0;padding:5px 9px;font-size:12px;font-family:Inter,sans-serif;outline:none;"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();addSubCatById('${safeId}','${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}');}" />
+                            <button onclick="addSubCatById('${safeId}','${cat.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" style="background:rgba(161,230,51,.15);color:#a1e633;border:none;border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;">+ Ajouter</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function addSubCatById(safeId, cat) {
+            const input = document.getElementById(`new-sub-${safeId}`);
+            const val = input ? input.value.trim() : '';
+            if (!val) return;
+            if (!SUBCATEGORIES[cat]) SUBCATEGORIES[cat] = [];
+            SUBCATEGORIES[cat].push(val);
+            saveCats(SUBCATEGORIES);
+            input.value = '';
+            renderCatManager();
+        }
+
+        // ═══════════════════════════════════════════════
         // INIT
         // ═══════════════════════════════════════════════
-        window.addEventListener('DOMContentLoaded', loadData);
+        window.addEventListener('DOMContentLoaded', () => {
+            // Attach sub-cat change listener
+            document.getElementById('f-sous-cat').addEventListener('change', onSubCatChange);
+            loadData();
+        });
 
     </script>
 </body>

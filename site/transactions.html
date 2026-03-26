@@ -141,9 +141,13 @@
         }
 
         function getVal(t) {
-            const m = cleanAmount(t.montant);
-            const i = cleanAmount(t.income);
-            return m || i || 0;
+            if (isRev(t)) {
+                // Revenue: amount is stored in the income column
+                return cleanAmount(t.income) || 0;
+            } else {
+                // Expense: amount is stored in the montant column
+                return cleanAmount(t.montant) || 0;
+            }
         }
 
         function getLabel(t) {
@@ -211,7 +215,7 @@
                 const date = parseDt(t.date);
                 const dateStr = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : String(t.date || '');
                 const cat = getLabel(t);
-                const lieu = t.lieu || t.description || (revenue ? 'Entrée' : 'Sortie');
+                const lieu = t.sous_categorie || t.paiement || t.lieu || t.description || (revenue ? 'Entrée' : 'Sortie');
 
                 return `
       <div class="flex items-center p-4 gap-4 hover:bg-primary/5 transition-colors">
