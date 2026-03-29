@@ -13,12 +13,23 @@
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" } } }
+            theme: { 
+                extend: { 
+                    colors: { 
+                        "primary": "#e63946", 
+                        "background-dark": "#0d0608",
+                        "surface": "#1a0c0f",
+                        "border-match": "#3a1a20"
+                    } 
+                } 
+            }
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background: #0d0608;
+            color: #f5f0f1;
             overflow-x: hidden;
             width: 100%;
             touch-action: pan-y;
@@ -40,6 +51,9 @@
     <header class="p-4 border-b border-primary/10 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg">
         <div class="flex items-center gap-4">
             <a href="dashboard.html" class="material-symbols-outlined text-primary">arrow_back</a>
+            <div class="size-8 bg-gradient-to-br from-primary to-surface rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="assets/piggy_bank_logo.png" alt="Logo" class="size-full object-cover" />
+            </div>
             <h1 class="text-xl font-bold">Analyse Détaillée</h1>
         </div>
     </header>
@@ -207,11 +221,11 @@
 
             // Legend
             const legend = document.getElementById('category-legend');
-            const colors = ['#a1e633', '#60a5fa', '#f87171', '#fbbf24', '#818cf8', '#f472b6', '#2dd4bf', '#a78bfa'];
+            const colors = ['#e63946', '#ff4d5a', '#b4212c', '#800020', '#ff8fa3', '#c9184a', '#a4161a', '#660708'];
             legend.innerHTML = sorted.slice(0, 8).map((s, i) => `
     <div class="flex items-center gap-1.5 truncate">
       <span class="size-2 rounded-full" style="background:${colors[i % colors.length]}"></span>
-      <span class="text-slate-400 text-[9px]">${s[0]}:</span>
+      <span class="text-muted text-[9px]">${s[0]}:</span>
       <span class="font-bold text-[9px]">${Math.round(s[1] / (totalDep || 1) * 100)}%</span>
     </div>
   `).join('');
@@ -256,24 +270,61 @@
             const depData = keys.map(k => months[k].dep);
             const savData = keys.map(k => months[k].rev - months[k].dep);
 
+            const kdhValuesPlugin = {
+                id: 'kdhValues',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const val = dataset.data[index];
+                                if (val === 0) return;
+                                const text = (Math.abs(val) >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
+                                ctx.font = 'bold 9px Inter';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillStyle = '#f5f0f1';
+                                if (val >= 0) {
+                                    ctx.fillText(text, element.x, element.y - 4);
+                                } else {
+                                    ctx.textBaseline = 'top';
+                                    ctx.fillText(text, element.x, element.y + 4);
+                                }
+                            });
+                        }
+                    });
+                }
+            };
+
             new Chart(document.getElementById('monthly-bar-chart'), {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [
-                        { label: 'Revenus', data: revData, backgroundColor: '#a1e633', borderRadius: 4 },
-                        { label: 'Dépenses', data: depData, backgroundColor: '#f87171', borderRadius: 4 },
-                        { label: 'Épargne', data: savData, backgroundColor: '#60a5fa', borderRadius: 4 }
+                        { label: 'Revenus', data: revData, backgroundColor: '#e63946', borderRadius: 4 },
+                        { label: 'Dépenses', data: depData, backgroundColor: '#b4212c', borderRadius: 4 },
+                        { label: 'Épargne', data: savData, backgroundColor: '#ff8fa3', borderRadius: 4 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-                        y: { grid: { color: 'rgba(161,230,51,0.05)' }, ticks: { color: '#64748b', font: { size: 9 }, callback: v => v >= 1000 ? (v / 1000) + 'k' : v } }
+                        x: { grid: { display: false }, ticks: { color: '#aa8890', font: { size: 10 } } },
+                        y: { 
+                            display: false,
+                            grid: { color: 'rgba(230, 57, 70, 0.05)' }, 
+                            ticks: { 
+                                color: '#aa8890', 
+                                font: { size: 9 }, 
+                                callback: v => v >= 1000 ? (v / 1000) + 'k' : v 
+                            } 
+                        }
                     },
                     plugins: { legend: { display: false } }
-                }
+                },
+                plugins: [kdhValuesPlugin]
             });
         }
 

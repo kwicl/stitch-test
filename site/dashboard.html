@@ -13,13 +13,27 @@
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" }, fontFamily: { "display": ["Inter"] } } }
+            theme: { 
+                extend: { 
+                    colors: { 
+                        "primary": "#e63946", 
+                        "primary-hover": "#ff4d5a",
+                        "background-dark": "#0d0608",
+                        "surface": "#1a0c0f",
+                        "surface-light": "#241215",
+                        "border-match": "#3a1a20"
+                    }, 
+                    fontFamily: { "display": ["Inter"] } 
+                } 
+            }
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100dvh;
+            background: #0d0608;
+            color: #f5f0f1;
             overflow-x: hidden;
             width: 100%;
             touch-action: pan-y;
@@ -66,10 +80,10 @@
         #modal-box {
             width: 100%;
             max-width: 430px;
-            background: #1b2111;
+            background: #1a0c0f;
             border-radius: 24px 24px 0 0;
             padding: 24px 20px 40px;
-            border-top: 1px solid rgba(161, 230, 51, .25);
+            border-top: 1px solid rgba(230, 57, 70, .25);
             animation: slideUp .3s ease;
             max-height: 90vh;
             overflow-y: auto;
@@ -90,10 +104,10 @@
         #modal-box select,
         #modal-box textarea {
             width: 100%;
-            background: rgba(161, 230, 51, .05);
-            border: 1px solid rgba(161, 230, 51, .15);
+            background: rgba(230, 57, 70, .05);
+            border: 1px solid rgba(230, 57, 70, .15);
             border-radius: 12px;
-            color: #f1f5f9;
+            color: #f5f0f1;
             padding: 12px 15px;
             font-size: 16px;
             font-family: 'Inter', sans-serif;
@@ -105,12 +119,12 @@
         #modal-box input:focus,
         #modal-box select:focus,
         #modal-box textarea:focus {
-            border-color: #a1e633;
+            border-color: #e63946;
         }
 
         #modal-box select option {
-            background: #1b2111;
-            color: #f1f5f9;
+            background: #1a0c0f;
+            color: #f5f0f1;
         }
 
         #toast {
@@ -118,8 +132,8 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: #a1e633;
-            color: #1b2111;
+            background: #e63946;
+            color: #fff;
             padding: 12px 24px;
             border-radius: 999px;
             font-size: 13px;
@@ -129,6 +143,7 @@
             transition: all .3s ease;
             white-space: nowrap;
             pointer-events: none;
+            box-shadow: 0 10px 30px rgba(230, 57, 70, 0.4);
         }
 
         #toast.show {
@@ -208,8 +223,10 @@
     <header
         class="flex items-center justify-between p-4 border-b border-primary/10 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg">
         <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>
-            <h1 class="text-xl font-bold tracking-tight">Smart Expenses</h1>
+            <div class="size-10 bg-gradient-to-br from-primary to-surface-light rounded-xl flex items-center justify-center overflow-hidden">
+                <img src="assets/piggy_bank_logo.png" alt="Logo" class="size-full object-cover" />
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-white">Smart Expenses</h1>
         </div>
         <div class="flex items-center gap-2">
             <div class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10">
@@ -489,8 +506,32 @@
         function populateCatSelect() {
             const sel = document.getElementById('f-categorie');
             const currentVal = sel.value;
-            sel.innerHTML = '<option value="">Choisir une catégorie…</option>' +
-                getCatList().map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Prioritize "Café" and "Alimentation"
+            const cats = getCatList();
+            const top = ['Café', 'Alimentation'];
+            const others = cats.filter(c => !top.includes(c)).sort();
+            
+            sel.innerHTML = '<option value="">Choisir une catégorie…</option>';
+            
+            top.forEach(c => {
+                if (cats.includes(c)) {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    opt.style.fontWeight = 'bold';
+                    opt.style.color = '#e63946';
+                    sel.appendChild(opt);
+                }
+            });
+            
+            others.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                sel.appendChild(opt);
+            });
+
             if (currentVal) sel.value = currentVal;
         }
 
@@ -500,9 +541,16 @@
             const subSel = document.getElementById('f-sous-cat');
             const customInp = document.getElementById('f-sous-cat-custom');
             const subs = SUBCATEGORIES[cat] || [];
+            
             subSel.innerHTML = '<option value="">Choisir une sous-catégorie…</option>' +
                 subs.map(s => `<option value="${s}">${s}</option>`).join('') +
                 '<option value="__custom__">✏️ Saisir manuellement…</option>';
+            
+            // Default to first sub-category if available
+            if (subs.length > 0) {
+                subSel.value = subs[0];
+            }
+            
             subSel.style.display = 'block';
             customInp.style.display = 'none';
             customInp.value = '';
@@ -608,7 +656,8 @@
                 if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
                 return inc || "Revenu";
             }
-            return t.categorie || "Dépense";
+            // Prioritize Sub-Category as Category label
+            return t.sous_categorie || t.categorie || "Dépense";
         }
 
         function getFiltered() {
@@ -715,6 +764,7 @@
             const canvas = document.getElementById('category-chart');
             if (!tx.length) {
                 if (barChart) { barChart.destroy(); barChart = null; }
+            if (barChart) { barChart.destroy(); barChart = null; }
                 return;
             }
 
@@ -750,15 +800,15 @@
                                 const val = dataset.data[index];
                                 if (val === 0) return;
                                 const text = (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
-                                ctx.font = 'bold 10px Inter';
+                                 ctx.font = 'bold 10px Inter';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                // Si la barre est assez grande, on met le texte à l'intérieur
+                                // Inscription visible (blanc sur barres rouges, rouge sur fond sombre)
                                 if (element.base - element.y > 20) {
-                                    ctx.fillStyle = '#1b2111'; // foncé
+                                    ctx.fillStyle = '#ffffff'; // Blanc pour visibilité sur la barre
                                     ctx.fillText(text, element.x, element.y + 12);
                                 } else {
-                                    ctx.fillStyle = '#a1e633'; // lime si ça sort
+                                    ctx.fillStyle = '#ff4d5a'; // Rouge clair pour visibilité sur fond noir
                                     ctx.fillText(text, element.x, element.y - 8);
                                 }
                             });
@@ -938,12 +988,22 @@
         // ═══════════════════════════════════════════════
         async function loadData() {
             try {
+                // Initialize local tx from storage to show them immediately
+                const local = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                if (local.length > 0) {
+                    allTx = local;
+                    refresh();
+                }
+
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success && Array.isArray(data.data)) {
-                    // On garde l'index d'origine pour le tri par "heure de saisie"
+                    // Combine remote and pending local
                     allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
-                    document.getElementById('conn-dot').style.background = '#a1e633';
+                    // Cache for next time
+                    localStorage.setItem('local_tx_history', JSON.stringify(allTx.slice(0, 100)));
+                    
+                    document.getElementById('conn-dot').style.background = '#e63946';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
                     buildDropdown();
 
@@ -964,9 +1024,6 @@
                 console.error(e);
                 document.getElementById('conn-dot').style.background = '#f87171';
                 document.getElementById('conn-text').textContent = '⚠️ Hors ligne';
-                document.getElementById('tx-list').innerHTML = '';
-                document.getElementById('tx-empty').classList.remove('hidden');
-                updateStats([]); updateChart([]);
             }
         }
 
@@ -994,13 +1051,15 @@
             const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
             const sousCat = getSelectedSubCat();
 
+            const parentCat = document.getElementById('f-categorie').value;
+
             const newTx = {
                 date: document.getElementById('f-date').value,
-                // ✅ CORRECT COLUMN ROUTING: revenue → income col, expense → montant col
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
-                categorie: document.getElementById('f-categorie').value,
-                sous_categorie: sousCat,
+                // ✅ SUB-CATEGORY replaces CATEGORY ("à la place de depense")
+                categorie: sousCat || parentCat, 
+                sous_categorie: parentCat, // store parent cat in sub-cat col
                 lieu: document.getElementById('f-lieu').value,
                 description: document.getElementById('f-desc').value,
                 index: allTx.length
@@ -1020,17 +1079,43 @@
                 action: 'addTransaction'
             };
 
+            // OFFLINE SUPPORT
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            queue.push(payload);
+            localStorage.setItem('pending_tx', JSON.stringify(queue));
+
             try {
-                fetch(SHEETS_API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
+                processQueue();
             } catch (err) {
                 console.error("Erreur sync:", err);
-                showToast('⚠️ Erreur de synchronisation, mais conservé localement.', true);
             }
         }
+
+        async function processQueue() {
+            if (!navigator.onLine) return;
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            if (queue.length === 0) return;
+
+            const item = queue[0];
+            try {
+                const res = await fetch(SHEETS_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(item)
+                });
+                
+                // Si OK (mode: no-cors ne permet pas de voir la réponse mais on assume success si pas d'erreur), on retire
+                queue.shift();
+                localStorage.setItem('pending_tx', JSON.stringify(queue));
+                
+                if (queue.length > 0) setTimeout(processQueue, 500);
+                else showToast('✅ Données synchronisées avec Google Sheets');
+            } catch (err) {
+                console.warn("Retrying later...");
+            }
+        }
+
+        window.addEventListener('online', processQueue);
 
         // ═══════════════════════════════════════════════
         // TOAST

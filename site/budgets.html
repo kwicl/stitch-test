@@ -13,12 +13,23 @@
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { extend: { colors: { "primary": "#a1e633", "background-dark": "#1b2111" } } }
+            theme: { 
+                extend: { 
+                    colors: { 
+                        "primary": "#e63946", 
+                        "background-dark": "#0d0608",
+                        "surface": "#1a0c0f",
+                        "border-match": "#3a1a20"
+                    } 
+                } 
+            }
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background: #0d0608;
+            color: #f5f0f1;
             overflow-x: hidden;
             width: 100%;
             touch-action: pan-y;
@@ -40,6 +51,9 @@
     <header class="p-4 border-b border-primary/10 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg">
         <div class="flex items-center gap-4">
             <a href="dashboard.html" class="material-symbols-outlined text-primary">arrow_back</a>
+            <div class="size-8 bg-gradient-to-br from-primary to-surface rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="assets/piggy_bank_logo.png" alt="Logo" class="size-full object-cover" />
+            </div>
             <h1 class="text-xl font-bold">Suivi des Budgets</h1>
         </div>
     </header>
@@ -295,8 +309,8 @@
                     datasets: [{
                         label: 'Dépenses réelles',
                         data: spentData,
-                        borderColor: '#a1e633',
-                        backgroundColor: 'rgba(161,230,51,0.1)',
+                        borderColor: '#e63946',
+                        backgroundColor: 'rgba(230, 57, 70, 0.1)',
                         fill: true,
                         tension: 0.4,
                         borderWidth: 3
