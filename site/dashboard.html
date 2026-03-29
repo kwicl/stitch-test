@@ -398,6 +398,7 @@
                 <span id="modal-status">Connecté à Google Sheets</span>
             </div>
             <form id="tx-form" onsubmit="submitTx(event)">
+                <input type="hidden" id="f-id" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📅 Date</label>
                 <input type="date" id="f-date" required />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰 Montant
@@ -414,7 +415,7 @@
                     <option value="">Choisir une catégorie…</option>
                 </select>
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🔖 Sous-catégorie</label>
-                <select id="f-sous-cat">
+                <select id="f-sous-cat" onchange="onSubCatChange()">
                     <option value="">Choisir une sous-catégorie…</option>
                 </select>
                 <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
@@ -423,11 +424,18 @@
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝
                     Description</label>
                 <textarea id="f-desc" rows="2" placeholder="Notes…"></textarea>
-                <button type="submit" id="submit-btn"
-                    class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl text-sm mt-1 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                    <span id="submit-icon">✅</span>
-                    <span id="submit-label">Enregistrer dans Google Sheets</span>
-                </button>
+                
+                <div class="flex gap-2 mt-2">
+                    <button type="submit" id="submit-btn"
+                        class="flex-1 bg-primary text-background-dark font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                        <span id="submit-icon">✅</span>
+                        <span id="submit-label">Enregistrer</span>
+                    </button>
+                    <button type="button" id="delete-btn" onclick="deleteTx()" style="display:none;"
+                        class="w-12 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl flex items-center justify-center hover:bg-red-500/20 transition-all">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -908,17 +916,24 @@
                 const sub = t.sous_categorie || t.paiement || t.lieu || t.description || (income ? 'Entrée' : 'Sortie');
                 const d = parseDt(t.date);
                 const ds = d ? d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : String(t.date);
-                return `<div class="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl">
+                const safeId = String(t.id || '').replace(/'/g, "\\'");
+                
+                return `<div class="flex items-center gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl group relative overflow-hidden">
       <div class="size-11 flex-shrink-0 flex items-center justify-center rounded-xl ${s.c}">
         <span class="material-symbols-outlined" style="font-size:20px;">${s.i}</span>
       </div>
-      <div class="flex-1 min-w-0">
+      <div class="flex-1 min-w-0" onclick="editTx('${safeId}')">
         <p class="font-semibold text-sm truncate">${label}</p>
         <p class="text-xs text-slate-400 truncate">${sub}</p>
       </div>
-      <div class="text-right flex-shrink-0">
+      <div class="text-right flex-shrink-0" onclick="editTx('${safeId}')">
         <p class="font-bold text-sm ${income ? 'text-primary' : 'text-slate-100'}">${income ? '+' : '-'}${fmtDH(amount)}</p>
         <p class="text-[10px] text-slate-400">${ds}</p>
+      </div>
+      <div class="absolute right-0 top-0 bottom-0 flex items-center pr-2 translate-x-full group-hover:translate-x-0 transition-transform bg-gradient-to-l from-background-dark/90 to-transparent">
+        <button onclick="editTx('${safeId}')" class="p-1.5 text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+        </button>
       </div>
     </div>`;
             }).join('');
@@ -1031,52 +1046,116 @@
         // MODAL
         // ═══════════════════════════════════════════════
         function openModal() {
-            document.getElementById('modal-overlay').classList.add('open');
+            document.getElementById('modal-overlay').classList.add('active');
+            // Reset to "New" state by default
+            document.getElementById('modal-box').querySelector('h2').textContent = "➕ Nouvelle transaction";
+            document.getElementById('f-id').value = '';
             document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
             populateCatSelect();
             onCatChange();
+            document.getElementById('submit-label').textContent = "Enregistrer";
+            document.getElementById('delete-btn').style.display = 'none';
         }
         function closeModal() {
-            document.getElementById('modal-overlay').classList.remove('open');
+            document.getElementById('modal-overlay').classList.remove('active');
             document.getElementById('tx-form').reset();
             document.getElementById('f-sous-cat-custom').style.display = 'none';
         }
         function overlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
+        function editTx(id) {
+            const t = allTx.find(x => x.id === id);
+            if (!t) return;
+            
+            openModal();
+            document.getElementById('modal-box').querySelector('h2').textContent = "✏️ Modifier";
+            document.getElementById('f-id').value = id;
+            
+            const dt = parseDt(t.date);
+            if (dt) document.getElementById('f-date').value = dt.toISOString().slice(0, 10);
+            
+            document.getElementById('f-montant').value = getVal(t);
+            document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
+            
+            // On pre-remplit la catégorie parente
+            populateCatSelect();
+            const parentCat = t.sous_categorie || t.categorie; 
+            document.getElementById('f-categorie').value = parentCat;
+            
+            onCatChange();
+            const subSel = document.getElementById('f-sous-cat');
+            const targetSub = t.categorie; // Dans notre logique, la catégorie affichée est la sous-cat réelle
+            
+            if ([...subSel.options].some(o => o.value === targetSub)) {
+                subSel.value = targetSub;
+            } else {
+                subSel.value = '__custom__';
+                onSubCatChange();
+                document.getElementById('f-sous-cat-custom').value = targetSub;
+            }
+            
+            document.getElementById('f-lieu').value = t.lieu || '';
+            document.getElementById('f-desc').value = t.description || '';
+            
+            document.getElementById('submit-label').textContent = "Mettre à jour";
+            document.getElementById('delete-btn').style.display = 'flex';
+        }
+
+        async function deleteTx() {
+            const id = document.getElementById('f-id').value;
+            if (!id || !confirm('Supprimer cette transaction ?')) return;
+            
+            allTx = allTx.filter(t => t.id !== id);
+            refresh();
+            closeModal();
+            
+            if (navigator.onLine) {
+                showToast("🗑️ Suppression...");
+                try {
+                    await fetch(SHEETS_API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: JSON.stringify({ action: 'deleteTransaction', id: id })
+                    });
+                    showToast("🗑️ Supprimé !");
+                } catch(e) { showToast("⚠️ Erreur réseau", true); }
+            } else {
+                showToast("⚠️ Connexion requise pour supprimer", true);
+            }
+        }
+
         async function submitTx(e) {
             e.preventDefault();
-            const btn = document.getElementById('submit-btn'), icon = document.getElementById('submit-icon'), lbl = document.getElementById('submit-label');
-
+            const editingId = document.getElementById('f-id').value;
             const isRevenu = document.getElementById('f-income').value === 'Revenu';
             const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
             const sousCat = getSelectedSubCat();
-
             const parentCat = document.getElementById('f-categorie').value;
 
             const newTx = {
+                id: editingId || '',
                 date: document.getElementById('f-date').value,
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
-                // ✅ SUB-CATEGORY replaces CATEGORY ("à la place de depense")
                 categorie: sousCat || parentCat, 
-                sous_categorie: parentCat, // store parent cat in sub-cat col
+                sous_categorie: parentCat,
                 lieu: document.getElementById('f-lieu').value,
-                description: document.getElementById('f-desc').value,
-                index: allTx.length
+                description: document.getElementById('f-desc').value
             };
 
             // OPTIMISTIC UI
-            allTx.push(newTx);
+            if (editingId) {
+                const idx = allTx.findIndex(t => t.id === editingId);
+                if (idx > -1) allTx[idx] = { ...allTx[idx], ...newTx };
+            } else {
+                allTx.unshift({ ...newTx, index: allTx.length });
+            }
             refresh();
             closeModal();
-            showToast('⚡ Validation rapide... Enregistrement en arrière-plan.');
 
-            // ✅ Map sous_categorie → paiement so the Apps Script writes it
-            // to the correct column F (formerly "Quel moyen de paiement")
             const payload = {
                 ...newTx,
-                paiement: sousCat,   // column F in Google Sheet
-                action: 'addTransaction'
+                action: editingId ? 'updateTransaction' : 'addTransaction'
             };
 
             // OFFLINE SUPPORT
@@ -1084,10 +1163,10 @@
             queue.push(payload);
             localStorage.setItem('pending_tx', JSON.stringify(queue));
 
-            try {
+            if (navigator.onLine) {
                 processQueue();
-            } catch (err) {
-                console.error("Erreur sync:", err);
+            } else {
+                showToast("📴 Mis en attente (Hors ligne)");
             }
         }
 
@@ -1239,10 +1318,19 @@
         // ═══════════════════════════════════════════════
         // INIT
         // ═══════════════════════════════════════════════
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             // Attach sub-cat change listener
             document.getElementById('f-sous-cat').addEventListener('change', onSubCatChange);
-            loadData();
+            await loadData();
+            
+            // Check for edit parameter
+            const params = new URLSearchParams(window.location.search);
+            const editId = params.get('edit');
+            if (editId) {
+                editTx(editId);
+                // Clear URL to prevent re-opening on refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         });
 
     </script>

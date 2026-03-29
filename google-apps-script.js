@@ -27,6 +27,14 @@ function doPost(e) {
       return addTransaction(sheet, data);
     }
 
+    if (data.action === 'updateTransaction') {
+      return updateTransaction(sheet, data);
+    }
+
+    if (data.action === 'deleteTransaction') {
+      return deleteTransaction(sheet, data);
+    }
+
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, error: 'Action inconnue' }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -95,12 +103,66 @@ function getAllTransactions(sheet) {
       description:    obj['description lieu ou note'] || obj['description'] || obj['lieu'] || '',
       lieu:           obj['description lieu ou note'] || obj['lieu'] || '',
     };
-  }).filter(function(t) {
-    // Filtrer les lignes vides
-    return t.date || t.montant || t.income;
-  });
+  }).filter(function(t) { return t.date || t.montant || t.income; });
 
+  return successResponse({ data: result });
+}
+
+function updateTransaction(sheet, data) {
+  var id = data.id;
+  if (!id) return errorResponse('ID manquant');
+
+  var rows = sheet.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      var rowIndex = i + 1;
+      var sousCat = data.sous_categorie || data.paiement || '';
+      var montant = data.montant !== '' && data.montant != null ? data.montant : '';
+      var income  = data.income  !== '' && data.income  != null ? data.income  : '';
+      
+      var newRow = [
+        id,
+        data.date || '',
+        montant,
+        income,
+        data.categorie || '',
+        sousCat,
+        (data.lieu || '') + (data.lieu && data.description ? ' — ' : '') + (data.description || '')
+      ];
+      
+      sheet.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
+      return successResponse({ id: id });
+    }
+  }
+  return errorResponse('ID non trouvé');
+}
+
+function deleteTransaction(sheet, data) {
+  var id = data.id;
+  if (!id) return errorResponse('ID manquant');
+
+  var rows = sheet.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      sheet.deleteRow(i + 1);
+      return successResponse({ id: id });
+    }
+  }
+  return errorResponse('ID non trouvé');
+}
+
+function successResponse(data) {
   return ContentService
-    .createTextOutput(JSON.stringify({ success: true, data: result }))
+    .createTextOutput(JSON.stringify({ success: true, ...data }))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+function errorResponse(msg) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: false, error: msg }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// FIN DU SCRIPT
+// ============================================================

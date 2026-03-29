@@ -234,7 +234,7 @@
                 const secondaryLabel = revenue ? 'Entrée' : (t.sous_categorie ? t.categorie : (t.lieu || t.description || 'Sortie'));
 
                 return `
-      <div class="flex items-center p-4 gap-4 hover:bg-primary/5 transition-colors">
+      <a href="dashboard.html?edit=${t.id}" class="flex items-center p-4 gap-4 hover:bg-primary/5 transition-colors">
         <div class="size-12 rounded-xl ${revenue ? 'bg-primary/20 text-primary' : 'bg-red-900/40 text-primary'} flex items-center justify-center">
           <span class="material-symbols-outlined">${revenue ? 'trending_up' : 'payments'}</span>
         </div>
@@ -246,7 +246,7 @@
           <p class="font-bold ${revenue ? 'text-primary' : 'text-slate-100'}">${revenue ? '+' : '-'}${fmtDH(amount)}</p>
           <p class="text-[10px] text-muted uppercase tracking-tighter">${dateStr}</p>
         </div>
-      </div>
+      </a>
     `;
             }).join('');
         }
