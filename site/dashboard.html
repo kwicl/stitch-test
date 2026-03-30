@@ -13,27 +13,37 @@
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { 
-                extend: { 
-                    colors: { 
-                        "primary": "#e63946", 
-                        "primary-hover": "#ff4d5a",
-                        "background-dark": "#0d0608",
-                        "surface": "#1a0c0f",
-                        "surface-light": "#241215",
-                        "border-match": "#3a1a20"
-                    }, 
-                    fontFamily: { "display": ["Inter"] } 
-                } 
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ff0000",
+                        "primary-hover": "#ff3333",
+                        "background-dark": "#1a0000",
+                        "surface": "#2d0000",
+                        "surface-light": "#4d0000",
+                        "border-match": "#660000"
+                    },
+                    fontFamily: { "display": ["Inter"] }
+                }
             }
         }
     </script>
     <style>
+        :root {
+            --bg: #1a0000;
+            --surface: #2d0000;
+            --surface2: #4d0000;
+            --accent: #ff0000;
+            --accent2: #8b0000;
+            --text: #00ff41;
+            --muted: #008f11;
+            --border: #660000;
+        }
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100dvh;
-            background: #0d0608;
-            color: #f5f0f1;
+            background: var(--bg);
+            color: var(--text);
             overflow-x: hidden;
             width: 100%;
             touch-action: pan-y;
@@ -80,10 +90,10 @@
         #modal-box {
             width: 100%;
             max-width: 430px;
-            background: #1a0c0f;
+            background: #2d0000;
             border-radius: 24px 24px 0 0;
             padding: 24px 20px 40px;
-            border-top: 1px solid rgba(230, 57, 70, .25);
+            border-top: 1px solid rgba(255, 0, 0, .35);
             animation: slideUp .3s ease;
             max-height: 90vh;
             overflow-y: auto;
@@ -104,10 +114,10 @@
         #modal-box select,
         #modal-box textarea {
             width: 100%;
-            background: rgba(230, 57, 70, .05);
-            border: 1px solid rgba(230, 57, 70, .15);
+            background: rgba(255, 0, 0, .06);
+            border: 1px solid rgba(255, 0, 0, .2);
             border-radius: 12px;
-            color: #f5f0f1;
+            color: #00ff41;
             padding: 12px 15px;
             font-size: 16px;
             font-family: 'Inter', sans-serif;
@@ -115,17 +125,10 @@
             margin-bottom: 12px;
             transition: border-color .2s;
         }
-
         #modal-box input:focus,
         #modal-box select:focus,
-        #modal-box textarea:focus {
-            border-color: #e63946;
-        }
-
-        #modal-box select option {
-            background: #1a0c0f;
-            color: #f5f0f1;
-        }
+        #modal-box textarea:focus { border-color: #ff0000; }
+        #modal-box select option { background: #2d0000; color: #00ff41; }
 
         #toast {
             position: fixed;
@@ -157,7 +160,7 @@
         }
 
         .skeleton {
-            background: linear-gradient(90deg, rgba(161, 230, 51, .04) 25%, rgba(161, 230, 51, .1) 50%, rgba(161, 230, 51, .04) 75%);
+            background: linear-gradient(90deg, rgba(255,0,0,.04) 25%, rgba(255,0,0,.12) 50%, rgba(255,0,0,.04) 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
             border-radius: 12px;
@@ -184,36 +187,35 @@
             font-weight: 700;
         }
 
-        /* Bordeaux Submit Button */
+        /* Bouton Submit bordeaux → rouge sombre */
         #submit-btn {
-            background-color: #800020 !important;
-            color: white !important;
+            background-color: #8b0000 !important;
+            color: #00ff41 !important;
             transition: all 0.2s;
-            animation: glow-bordeaux 2s infinite alternate;
+            animation: glow-rouge 2s infinite alternate;
         }
-
         #submit-btn:active {
             transform: scale(0.98);
-            background-color: #600018 !important;
+            background-color: #600000 !important;
         }
-
-        /* Bordeaux FAB */
+        /* FAB rouge sombre */
         .fab-bordeaux {
-            background-color: #800020 !important;
-            color: white !important;
-            box-shadow: 0 8px 20px rgba(128, 0, 32, 0.4);
-            animation: glow-bordeaux 2s infinite alternate;
+            background-color: #8b0000 !important;
+            color: #00ff41 !important;
+            box-shadow: 0 8px 20px rgba(139, 0, 0, 0.5);
+            animation: glow-rouge 2s infinite alternate;
         }
-
-        @keyframes glow-bordeaux {
-            0% {
-                box-shadow: 0 8px 20px rgba(128, 0, 32, 0.4), 0 0 5px rgba(128, 0, 32, 0.1);
-            }
-
-            100% {
-                box-shadow: 0 8px 20px rgba(128, 0, 32, 0.5), 0 0 20px rgba(128, 0, 32, 0.8), 0 0 40px rgba(128, 0, 32, 0.4);
-            }
+        @keyframes glow-rouge {
+            0%   { box-shadow: 0 8px 20px rgba(139,0,0,0.5), 0 0 5px rgba(255,0,0,0.2); }
+            100% { box-shadow: 0 8px 20px rgba(255,0,0,0.6), 0 0 25px rgba(255,0,0,0.9), 0 0 50px rgba(255,0,0,0.4); }
         }
+        /* Override Tailwind palette */
+        .text-slate-400 { color: var(--muted) !important; }
+        .text-slate-500 { color: var(--muted) !important; }
+        .text-slate-300 { color: var(--text) !important; }
+        .text-white { color: var(--text) !important; }
+        .text-slate-100 { color: var(--text) !important; }
+        .bg-slate-800 { background: #330000 !important; }
     </style>
 </head>
 
@@ -229,11 +231,12 @@
             <h1 class="text-xl font-bold tracking-tight text-white">Smart Expenses</h1>
         </div>
         <div class="flex items-center gap-2">
-            <div class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10">
+            <button onclick="forceSync()" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors" title="Forcer l'actualisation">
                 <span id="conn-dot"
                     style="width:7px;height:7px;border-radius:50%;background:#64748b;display:inline-block;transition:background .4s;"></span>
                 <span id="conn-text" class="text-primary/70">Chargement…</span>
-            </div>
+                <span class="material-symbols-outlined text-[14px] text-primary">sync</span>
+            </button>
             <button class="p-2 rounded-full bg-primary/10"><span
                     class="material-symbols-outlined text-xl">notifications</span></button>
         </div>
@@ -1042,30 +1045,48 @@
             }
         }
 
+        async function forceSync() {
+            showToast("🔄 Synchronisation...");
+            await loadData();
+            showToast("✅ Données à jour !");
+        }
+
         // ═══════════════════════════════════════════════
         // MODAL
         // ═══════════════════════════════════════════════
         function openModal() {
-            document.getElementById('modal-overlay').classList.add('active');
+            document.getElementById('modal-overlay').classList.add('open');
             // Reset to "New" state by default
             document.getElementById('modal-box').querySelector('h2').textContent = "➕ Nouvelle transaction";
             document.getElementById('f-id').value = '';
             document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
             populateCatSelect();
             onCatChange();
+            document.getElementById('f-montant').value = '';
+            document.getElementById('f-lieu').value = '';
+            document.getElementById('f-desc').value = '';
+            document.getElementById('f-income').value = '';
             document.getElementById('submit-label').textContent = "Enregistrer";
+            document.getElementById('submit-icon').textContent = '✅';
             document.getElementById('delete-btn').style.display = 'none';
         }
         function closeModal() {
-            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('modal-overlay').classList.remove('open');
             document.getElementById('tx-form').reset();
             document.getElementById('f-sous-cat-custom').style.display = 'none';
         }
         function overlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
         function editTx(id) {
+            if (!id || id === 'undefined') {
+                showToast("⚠️ Cette saisie manuelle nécessite une synchronisation (bouton Sync en haut).", true);
+                return;
+            }
             const t = allTx.find(x => x.id === id);
-            if (!t) return;
+            if (!t) {
+                showToast("⚠️ Transaction introuvable (Sync requise)", true);
+                return;
+            }
             
             openModal();
             document.getElementById('modal-box').querySelector('h2').textContent = "✏️ Modifier";

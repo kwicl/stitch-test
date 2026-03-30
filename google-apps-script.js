@@ -83,8 +83,18 @@ function getAllTransactions(sheet) {
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var rows = data.slice(1);
+  var idIndex = -1;
+  headers.forEach(function(h, i) {
+    if (String(h).toLowerCase().trim() === 'id') idIndex = i;
+  });
+  if (idIndex === -1) idIndex = 0; // Assuming ID is column A
 
-  var result = rows.map(function(row) {
+  var result = rows.map(function(row, idx) {
+    if (!row[idIndex]) {
+       row[idIndex] = Utilities.getUuid();
+       sheet.getRange(idx + 2, idIndex + 1).setValue(row[idIndex]);
+    }
+    
     var obj = {};
     headers.forEach(function(h, i) {
       obj[String(h).toLowerCase().trim()] = row[i];

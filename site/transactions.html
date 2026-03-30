@@ -7,46 +7,142 @@
     <title>Smart Expenses — Historique</title>
     <script src="assets/tailwind.js"></script>
     <link href="assets/inter.css" rel="stylesheet" />
-    <link href="assets/material.css"
-        rel="stylesheet" />
+    <link href="assets/material.css" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: { 
-                extend: { 
-                    colors: { 
-                        "primary": "#e63946", 
-                        "background-dark": "#0d0608",
-                        "surface": "#1a0c0f",
-                        "border-match": "#3a1a20"
-                    } 
-                } 
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ff0000",
+                        "background-dark": "#1a0000",
+                        "surface": "#2d0000",
+                        "surface2": "#4d0000",
+                        "border-match": "#660000"
+                    }
+                }
             }
         }
     </script>
     <style>
+        :root {
+            --bg: #1a0000;
+            --surface: #2d0000;
+            --surface2: #4d0000;
+            --accent: #ff0000;
+            --accent2: #8b0000;
+            --text: #00ff41;
+            --muted: #008f11;
+            --border: #660000;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background: #0d0608;
-            color: #f5f0f1;
+            background: var(--bg);
+            color: var(--text);
             overflow-x: hidden;
             width: 100%;
             touch-action: pan-y;
         }
+        html { overflow-x: hidden; height: 100%; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        html {
-            overflow-x: hidden;
-            height: 100%;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
+        /* ── MODAL ─────────────────────────── */
+        #modal-overlay {
             display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 999;
+            backdrop-filter: blur(8px);
+            align-items: flex-end;
+            justify-content: center;
         }
+        #modal-overlay.open {
+            display: flex;
+            animation: fadeIn .2s ease;
+        }
+        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+        #modal-box {
+            width: 100%;
+            max-width: 430px;
+            background: #2d0000;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 40px;
+            border-top: 1px solid rgba(255,0,0,.35);
+            animation: slideUp .3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+
+        #modal-box input,
+        #modal-box select,
+        #modal-box textarea {
+            width: 100%;
+            background: rgba(255,0,0,.06);
+            border: 1px solid rgba(255,0,0,.2);
+            border-radius: 12px;
+            color: #00ff41;
+            padding: 12px 15px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color .2s;
+        }
+        #modal-box input:focus,
+        #modal-box select:focus,
+        #modal-box textarea:focus { border-color: #ff0000; }
+        #modal-box select option { background: #2d0000; color: #00ff41; }
+
+        /* ── FAB ───────────────────────────── */
+        .fab-bordeaux {
+            background-color: #8b0000 !important;
+            color: #00ff41 !important;
+            box-shadow: 0 8px 20px rgba(139,0,0,0.5);
+            animation: glow-rouge 2s infinite alternate;
+        }
+        @keyframes glow-rouge {
+            0%   { box-shadow: 0 8px 20px rgba(139,0,0,0.5), 0 0 5px rgba(255,0,0,0.2); }
+            100% { box-shadow: 0 8px 20px rgba(255,0,0,0.6), 0 0 25px rgba(255,0,0,0.9), 0 0 50px rgba(255,0,0,0.4); }
+        }
+        #submit-btn {
+            background-color: #8b0000 !important;
+            color: #00ff41 !important;
+            transition: all 0.2s;
+        }
+        #submit-btn:active { transform: scale(0.98); background-color: #600000 !important; }
+        /* Tailwind overrides */
+        .text-slate-400 { color: var(--muted) !important; }
+        .text-white { color: var(--text) !important; }
+        .text-slate-100 { color: var(--text) !important; }
+
+        /* ── TOAST ─────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #e63946;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 9999;
+            opacity: 0;
+            transition: all .3s ease;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.error { background: #ef4444; }
     </style>
 </head>
 
 <body class="bg-background-dark text-slate-100 min-h-screen flex flex-col">
 
+    <!-- HEADER -->
     <header class="sticky top-0 z-10 bg-background-dark/90 backdrop-blur-lg border-b border-primary/10">
         <div class="flex items-center p-4 justify-between">
             <div class="flex items-center gap-4">
@@ -56,13 +152,15 @@
                 </div>
                 <h1 class="text-xl font-bold text-white">Historique</h1>
             </div>
-            <div id="sync-status" class="text-[10px] text-primary/60 bg-primary/10 px-3 py-1.5 rounded-full italic">
-                Synchro...</div>
+            <button onclick="forceSync()" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors" title="Forcer l'actualisation">
+                <span id="sync-status" class="text-primary/70">Synchro...</span>
+                <span class="material-symbols-outlined text-[14px] text-primary">sync</span>
+            </button>
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto pb-24">
-        <!-- Filtres simples -->
+    <main class="flex-1 overflow-y-auto pb-28">
+        <!-- Filtres -->
         <div class="flex gap-2 p-4 overflow-x-auto no-scrollbar">
             <button onclick="filterType('all')" id="btn-all"
                 class="flex h-9 shrink-0 items-center justify-center rounded-lg bg-primary text-background-dark px-4 text-sm font-bold">Tout</button>
@@ -74,7 +172,6 @@
 
         <!-- Liste des transactions -->
         <div id="history-list" class="divide-y divide-primary/5">
-            <!-- Les données seront insérées ici -->
             <div class="p-10 text-center opacity-50">Chargement de votre fichier Google Sheets...</div>
         </div>
 
@@ -84,16 +181,21 @@
         </div>
     </main>
 
+    <!-- FAB -->
+    <button onclick="openModal()"
+        class="fixed bottom-24 right-5 size-16 rounded-full fab-bordeaux shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20">
+        <span class="material-symbols-outlined text-4xl font-bold">add</span>
+    </button>
+
     <!-- BOTTOM NAV -->
-    <nav
-        class="fixed bottom-0 left-0 right-0 border-t border-primary/10 bg-background-dark/95 backdrop-blur-lg px-4 pb-6 pt-2 z-10">
+    <nav class="fixed bottom-0 left-0 right-0 border-t border-primary/10 bg-background-dark/95 backdrop-blur-lg px-4 pb-6 pt-2 z-10">
         <div class="flex gap-2 max-w-md mx-auto">
             <a href="dashboard.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
                 <span class="material-symbols-outlined">home</span>
                 <p class="text-[10px] font-bold uppercase tracking-widest">Accueil</p>
             </a>
             <a href="transactions.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-primary">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">receipt_long</span>
                 <p class="text-[10px] font-bold uppercase tracking-widest">Portefeuille</p>
             </a>
             <a href="analyse.html" class="flex flex-1 flex-col items-center gap-1 py-1 text-slate-400">
@@ -107,13 +209,152 @@
         </div>
     </nav>
 
+    <!-- MODAL AJOUT / MODIFICATION -->
+    <div id="modal-overlay" onclick="overlayClick(event)">
+        <div id="modal-box">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="modal-title" class="text-lg font-bold">➕ Nouvelle transaction</h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <form id="tx-form" onsubmit="submitTx(event)">
+                <input type="hidden" id="f-id" />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📅 Date</label>
+                <input type="date" id="f-date" required />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰 Montant (DH)</label>
+                <input type="number" id="f-montant" placeholder="Ex: 150" step="0.01" min="0" required />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📌 Type</label>
+                <select id="f-income" onchange="onTypeChange()">
+                    <option value="">💸 Dépense</option>
+                    <option value="Revenu">💰 Revenu</option>
+                </select>
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️ Catégorie</label>
+                <select id="f-categorie" onchange="onCatChange()">
+                    <option value="">Choisir une catégorie…</option>
+                </select>
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🔖 Sous-catégorie</label>
+                <select id="f-sous-cat">
+                    <option value="">Choisir une sous-catégorie…</option>
+                </select>
+                <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu</label>
+                <input type="text" id="f-lieu" placeholder="Ex: Marché central…" />
+                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝 Description</label>
+                <textarea id="f-desc" rows="2" placeholder="Notes…"></textarea>
+
+                <div class="flex gap-2 mt-2">
+                    <button type="submit" id="submit-btn"
+                        class="flex-1 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                        <span id="submit-icon">✅</span>
+                        <span id="submit-label">Enregistrer</span>
+                    </button>
+                    <button type="button" id="delete-btn" onclick="deleteTx()" style="display:none;"
+                        class="w-12 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl flex items-center justify-center hover:bg-red-500/20 transition-all">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+
     <script>
         const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
 
+        // ═══════════════════════════════════════════════
+        // CATEGORIES
+        // ═══════════════════════════════════════════════
+        const DEFAULT_SUBCATEGORIES = {
+            'Café': ['Café du matin', 'Café avec amis', 'Réunion café', 'Pause café', 'Autre'],
+            'Alimentation': ['Épicerie', 'Restaurant', 'Boulangerie', 'Fruits & Légumes', 'Viande / Poisson', 'Snack', 'Autre'],
+            'Transport': ['Carburant', 'Taxi / VTC', 'Transport en commun', 'Parking', 'Péage', 'Autre'],
+            'Déplacement': ["Voyage d'affaires", 'Taxi', 'Train / Bus', 'Hébergement', 'Autre'],
+            'Santé': ['Pharmacie', 'Médecin', 'Dentiste', 'Analyses médicales', 'Optique', 'Autre'],
+            'Voyages': ['Hôtel', 'Vol / Train', 'Restauration', 'Activités', 'Shopping', 'Souvenirs', 'Autre'],
+            'Bien-être': ['Coiffeur', 'Spa / Massage', 'Salle de sport', 'Cosmétiques', 'Autre'],
+            'Maison et frais de service': ['Eau', 'Électricité', 'Internet / Téléphone', 'Loyer', 'Entretien', 'Assurance', 'Autre'],
+            'Électroménagers': ['Cuisine', 'Électronique', 'Mobilier', 'Décoration', 'Autre'],
+            'Éducation enfant': ['Fournitures scolaires', 'Frais de scolarité', 'Activités parascolaires', 'Livres', 'Autre'],
+            'vetements enfants': ['Vêtements été', 'Vêtements hiver', 'Chaussures', 'Uniforme scolaire', 'Autre'],
+            'Appartement': ['Loyer', 'Charges', 'Réparations', 'Ameublement', 'Autre'],
+            'appartement KENITRA': ['Loyer', 'Charges', 'Réparations', 'Autre'],
+            'appartement CASA': ['Loyer', 'Charges', 'Réparations', 'Autre'],
+            'villa tamesna': ['Charges', 'Entretien', 'Réparations', 'Jardinage', 'Autre'],
+            'investissement LOT SAHEL icl': ['Avance', 'Tranche', 'Frais notaire', 'Taxes', 'Autre'],
+            'INVESTISSEMENT': ['IPO Bourse', 'Capex IT', 'Immobilier', 'Bourse', 'Autre'],
+            'Loisirs': ['Cinéma', 'Sorties', 'Jeux', 'Shopping', 'Livres', 'Autre'],
+            'Salaire': ['Salaire mensuel', 'Prime', 'Bonus', 'Autre'],
+            'Autres revenus': ['Location', 'Dividendes', 'Remboursement', 'Cadeau', 'Autre'],
+            'Autre': ['Divers', 'Non classé', 'Autre'],
+        };
+
+        function loadCats() {
+            try {
+                const saved = localStorage.getItem('smartExpenses_cats');
+                return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_SUBCATEGORIES));
+            } catch { return JSON.parse(JSON.stringify(DEFAULT_SUBCATEGORIES)); }
+        }
+        let SUBCATEGORIES = loadCats();
+
+        function populateCatSelect() {
+            const sel = document.getElementById('f-categorie');
+            const currentVal = sel.value;
+            const cats = Object.keys(SUBCATEGORIES);
+            const top = ['Café', 'Alimentation'];
+            const others = cats.filter(c => !top.includes(c)).sort();
+            sel.innerHTML = '<option value="">Choisir une catégorie…</option>';
+            top.forEach(c => {
+                if (cats.includes(c)) {
+                    const opt = document.createElement('option');
+                    opt.value = c; opt.textContent = c;
+                    opt.style.fontWeight = 'bold'; opt.style.color = '#e63946';
+                    sel.appendChild(opt);
+                }
+            });
+            others.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                sel.appendChild(opt);
+            });
+            if (currentVal) sel.value = currentVal;
+        }
+
+        function onCatChange() {
+            const cat = document.getElementById('f-categorie').value;
+            const subSel = document.getElementById('f-sous-cat');
+            const customInp = document.getElementById('f-sous-cat-custom');
+            const subs = SUBCATEGORIES[cat] || [];
+            subSel.innerHTML = '<option value="">Choisir une sous-catégorie…</option>' +
+                subs.map(s => `<option value="${s}">${s}</option>`).join('') +
+                '<option value="__custom__">✏️ Saisir manuellement…</option>';
+            if (subs.length > 0) subSel.value = subs[0];
+            subSel.style.display = 'block';
+            customInp.style.display = 'none';
+            customInp.value = '';
+        }
+
+        function onSubCatChange() {
+            const subSel = document.getElementById('f-sous-cat');
+            const customInp = document.getElementById('f-sous-cat-custom');
+            if (subSel.value === '__custom__') { customInp.style.display = 'block'; customInp.focus(); }
+            else customInp.style.display = 'none';
+        }
+
+        function getSelectedSubCat() {
+            const subSel = document.getElementById('f-sous-cat');
+            if (subSel.value === '__custom__') return document.getElementById('f-sous-cat-custom').value.trim();
+            return subSel.value;
+        }
+
+        function onTypeChange() { populateCatSelect(); onCatChange(); }
+
+        // ═══════════════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════════════
         let allTx = [];
         let currentFilter = 'all';
 
-        // Parsing de date ultra-robuste
         function parseDt(s) {
             if (!s) return null;
             let str = String(s).trim();
@@ -122,31 +363,29 @@
                 const m = str.match(/\d+/g);
                 if (m) return new Date(m[0], m[1], m[2]);
             }
-            const parts = str.split(/[/\- ]/);
+            const parts = str.split(/[\/\- ]/);
             if (parts.length >= 3) {
                 if (parts[0].length === 2 || (parts[0].length === 1 && parts[2].length === 4)) {
-                    const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
-                    const dt = new Date(y, m, d);
-                    if (!isNaN(dt.getTime())) return dt;
+                    const d = parseInt(parts[0],10), m = parseInt(parts[1],10)-1, y = parseInt(parts[2],10);
+                    const dt = new Date(y,m,d); if (!isNaN(dt.getTime())) return dt;
                 } else if (parts[0].length === 4) {
-                    const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
-                    const dt = new Date(y, m, d);
-                    if (!isNaN(dt.getTime())) return dt;
+                    const y = parseInt(parts[0],10), m = parseInt(parts[1],10)-1, d = parseInt(parts[2],10);
+                    const dt = new Date(y,m,d); if (!isNaN(dt.getTime())) return dt;
                 }
             }
-            let d = new Date(str);
+            const d = new Date(str);
             return isNaN(d.getTime()) ? null : d;
         }
 
         function isRev(t) {
-            const incomeVal = String(t.income || "").trim().toLowerCase();
-            return incomeVal !== "" && incomeVal !== "false" && incomeVal !== "0";
+            const v = String(t.income || "").trim().toLowerCase();
+            return v !== "" && v !== "false" && v !== "0";
         }
 
         function cleanAmount(v) {
             if (typeof v === 'number') return v;
             if (!v) return 0;
-            let s = String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+            const s = String(v).replace(/\s/g,'').replace(',','.').replace(/[^\d.-]/g,'');
             return parseFloat(s) || 0;
         }
 
@@ -155,13 +394,8 @@
         }
 
         function getVal(t) {
-            if (isRev(t)) {
-                // Revenue: amount is stored in the income column
-                return cleanAmount(t.income) || 0;
-            } else {
-                // Expense: amount is stored in the montant column
-                return cleanAmount(t.montant) || 0;
-            }
+            if (isRev(t)) return cleanAmount(t.income) || 0;
+            return cleanAmount(t.montant) || 0;
         }
 
         function getLabel(t) {
@@ -170,32 +404,40 @@
                 if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
                 return inc || "Revenu";
             }
-            // Sub-category as primary label
             return t.sous_categorie || t.categorie || "Dépense";
         }
 
+        // ═══════════════════════════════════════════════
+        // DATA LOADING
+        // ═══════════════════════════════════════════════
         async function loadHistory() {
             try {
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success) {
                     allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
-                    document.getElementById('sync-status').textContent = `Dernière synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
+                    document.getElementById('sync-status').textContent = `Synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
                     renderTransactions();
                 }
             } catch (e) {
-                document.getElementById('history-list').innerHTML = `<div class="p-10 text-center text-red-400">Impossible de charger les données. Vérifiez votre URL API.</div>`;
+                document.getElementById('history-list').innerHTML = `<div class="p-10 text-center text-red-400">Impossible de charger les données.<br>Vérifiez votre connexion.</div>`;
             }
         }
 
+        async function forceSync() {
+            document.getElementById('sync-status').textContent = 'Sync...';
+            await loadHistory();
+        }
+
+        // ═══════════════════════════════════════════════
+        // RENDER
+        // ═══════════════════════════════════════════════
         function filterType(type) {
             currentFilter = type;
-            ['all', 'rev', 'dep'].forEach(id => {
+            ['all','rev','dep'].forEach(id => {
                 const btn = document.getElementById('btn-' + id);
-                btn.classList.toggle('bg-primary', id === type);
-                btn.classList.toggle('text-background-dark', id === type);
-                btn.classList.toggle('bg-primary/10', id !== type);
-                btn.classList.toggle('text-slate-400', id !== type);
+                const active = id === type;
+                btn.className = `flex h-9 shrink-0 items-center justify-center rounded-lg px-4 text-sm ${active ? 'bg-primary text-background-dark font-bold' : 'bg-primary/10 text-slate-400 font-medium'}`;
             });
             renderTransactions();
         }
@@ -208,11 +450,9 @@
             if (currentFilter === 'rev') filtered = allTx.filter(isRev);
             if (currentFilter === 'dep') filtered = allTx.filter(t => !isRev(t));
 
-            // Tri par date décroissant, puis par index (heure de saisie)
             filtered.sort((a, b) => {
                 const da = parseDt(a.date), db = parseDt(b.date);
-                const ta = da ? da.getTime() : 0;
-                const tb = db ? db.getTime() : 0;
+                const ta = da ? da.getTime() : 0, tb = db ? db.getTime() : 0;
                 if (ta === tb) return (b.index || 0) - (a.index || 0);
                 return tb - ta;
             });
@@ -228,30 +468,171 @@
                 const revenue = isRev(t);
                 const amount = getVal(t);
                 const date = parseDt(t.date);
-                const dateStr = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : String(t.date || '');
+                const dateStr = date ? date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : String(t.date || '');
                 const catLabel = getLabel(t);
-                // Muted secondary label (Category)
                 const secondaryLabel = revenue ? 'Entrée' : (t.sous_categorie ? t.categorie : (t.lieu || t.description || 'Sortie'));
+                const safeId = String(t.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
                 return `
-      <a href="dashboard.html?edit=${t.id}" class="flex items-center p-4 gap-4 hover:bg-primary/5 transition-colors">
-        <div class="size-12 rounded-xl ${revenue ? 'bg-primary/20 text-primary' : 'bg-red-900/40 text-primary'} flex items-center justify-center">
-          <span class="material-symbols-outlined">${revenue ? 'trending_up' : 'payments'}</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold truncate text-white">${catLabel}</p>
-          <p class="text-xs text-muted truncate">${secondaryLabel}</p>
-        </div>
-        <div class="text-right">
-          <p class="font-bold ${revenue ? 'text-primary' : 'text-slate-100'}">${revenue ? '+' : '-'}${fmtDH(amount)}</p>
-          <p class="text-[10px] text-muted uppercase tracking-tighter">${dateStr}</p>
-        </div>
-      </a>
-    `;
+<div class="flex items-center p-4 gap-4 hover:bg-primary/5 active:bg-primary/10 transition-colors cursor-pointer" onclick="editTx('${safeId}')">
+  <div class="size-12 rounded-xl flex-shrink-0 flex items-center justify-center ${revenue ? 'bg-primary/20 text-primary' : 'bg-red-900/40 text-primary'}">
+    <span class="material-symbols-outlined">${revenue ? 'trending_up' : 'payments'}</span>
+  </div>
+  <div class="flex-1 min-w-0">
+    <p class="font-semibold truncate text-white">${catLabel}</p>
+    <p class="text-xs text-slate-400 truncate">${secondaryLabel}</p>
+  </div>
+  <div class="text-right flex-shrink-0">
+    <p class="font-bold ${revenue ? 'text-primary' : 'text-slate-100'}">${revenue ? '+' : '-'}${fmtDH(amount)}</p>
+    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">${dateStr}</p>
+  </div>
+  <span class="material-symbols-outlined text-slate-600 text-[18px] flex-shrink-0">chevron_right</span>
+</div>`;
             }).join('');
         }
 
-        window.onload = loadHistory;
+        // ═══════════════════════════════════════════════
+        // MODAL
+        // ═══════════════════════════════════════════════
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('open');
+            document.getElementById('modal-title').textContent = '➕ Nouvelle transaction';
+            document.getElementById('f-id').value = '';
+            document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-montant').value = '';
+            document.getElementById('f-lieu').value = '';
+            document.getElementById('f-desc').value = '';
+            document.getElementById('f-income').value = '';
+            populateCatSelect();
+            onCatChange();
+            document.getElementById('submit-label').textContent = 'Enregistrer';
+            document.getElementById('submit-icon').textContent = '✅';
+            document.getElementById('delete-btn').style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+            document.getElementById('tx-form').reset();
+            document.getElementById('f-sous-cat-custom').style.display = 'none';
+        }
+
+        function overlayClick(e) {
+            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        }
+
+        function editTx(id) {
+            if (!id || id === 'undefined') {
+                showToast('⚠️ Transaction sans ID — sync requise', true);
+                return;
+            }
+            const t = allTx.find(x => x.id === id);
+            if (!t) { showToast('⚠️ Transaction introuvable', true); return; }
+
+            openModal();
+            document.getElementById('modal-title').textContent = '✏️ Modifier la transaction';
+            document.getElementById('f-id').value = id;
+
+            const dt = parseDt(t.date);
+            if (dt) document.getElementById('f-date').value = dt.toISOString().slice(0, 10);
+
+            document.getElementById('f-montant').value = getVal(t);
+            document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
+
+            populateCatSelect();
+            const parentCat = t.sous_categorie || t.categorie;
+            document.getElementById('f-categorie').value = parentCat;
+            onCatChange();
+
+            const subSel = document.getElementById('f-sous-cat');
+            const targetSub = t.categorie;
+            if ([...subSel.options].some(o => o.value === targetSub)) {
+                subSel.value = targetSub;
+            } else {
+                subSel.value = '__custom__';
+                onSubCatChange();
+                document.getElementById('f-sous-cat-custom').value = targetSub || '';
+            }
+
+            document.getElementById('f-lieu').value = t.lieu || '';
+            document.getElementById('f-desc').value = t.description || '';
+            document.getElementById('submit-label').textContent = 'Mettre à jour';
+            document.getElementById('submit-icon').textContent = '💾';
+            document.getElementById('delete-btn').style.display = 'flex';
+        }
+
+        async function deleteTx() {
+            const id = document.getElementById('f-id').value;
+            if (!id || !confirm('Supprimer cette transaction ?')) return;
+            allTx = allTx.filter(t => t.id !== id);
+            renderTransactions();
+            closeModal();
+            showToast('🗑️ Suppression...');
+            try {
+                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTransaction', id }) });
+                showToast('🗑️ Transaction supprimée !');
+            } catch (e) { showToast('⚠️ Erreur réseau', true); }
+        }
+
+        async function submitTx(e) {
+            e.preventDefault();
+            const editingId = document.getElementById('f-id').value;
+            const isRevenu = document.getElementById('f-income').value === 'Revenu';
+            const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
+            const sousCat = getSelectedSubCat();
+            const parentCat = document.getElementById('f-categorie').value;
+
+            const newTx = {
+                id: editingId || '',
+                date: document.getElementById('f-date').value,
+                montant: isRevenu ? '' : montantVal,
+                income: isRevenu ? montantVal : '',
+                categorie: sousCat || parentCat,
+                sous_categorie: parentCat,
+                lieu: document.getElementById('f-lieu').value,
+                description: document.getElementById('f-desc').value
+            };
+
+            if (editingId) {
+                const idx = allTx.findIndex(t => t.id === editingId);
+                if (idx > -1) allTx[idx] = { ...allTx[idx], ...newTx };
+            } else {
+                allTx.unshift({ ...newTx, index: allTx.length });
+            }
+            renderTransactions();
+            closeModal();
+
+            const payload = { ...newTx, action: editingId ? 'updateTransaction' : 'addTransaction' };
+            showToast(editingId ? '💾 Mise à jour...' : '📤 Ajout en cours...');
+
+            try {
+                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                showToast(editingId ? '✅ Transaction mise à jour !' : '✅ Transaction ajoutée !');
+            } catch (e) {
+                const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+                queue.push(payload);
+                localStorage.setItem('pending_tx', JSON.stringify(queue));
+                showToast('📴 Mis en attente (hors ligne)');
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        // TOAST
+        // ═══════════════════════════════════════════════
+        function showToast(msg, err = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'show' + (err ? ' error' : '');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.className = '', 3500);
+        }
+
+        // ═══════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('f-sous-cat').addEventListener('change', onSubCatChange);
+            loadHistory();
+        });
     </script>
 </body>
 
