@@ -58,10 +58,11 @@ function addTransaction(sheet, data) {
   var montant = data.montant !== '' && data.montant != null ? data.montant : '';
   var income = data.income !== '' && data.income != null ? data.income : '';
   var sousCat = data.sous_categorie || data.paiement || '';
+  var dateVal = parseInputDate(data.date);
   
   var row = [
     id,
-    data.date || '',
+    dateVal,
     montant,
     income,
     data.categorie || '',
@@ -84,10 +85,11 @@ function updateTransaction(sheet, data) {
       var montant = data.montant !== '' && data.montant != null ? data.montant : '';
       var income = data.income !== '' && data.income != null ? data.income : '';
       var sousCat = data.sous_categorie || data.paiement || '';
+      var dateVal = parseInputDate(data.date);
       
       var newRow = [
         id,
-        data.date || '',
+        dateVal,
         montant,
         income,
         data.categorie || '',
@@ -100,6 +102,19 @@ function updateTransaction(sheet, data) {
     }
   }
   return jsonResponse({ success: false, error: 'ID ' + id + ' non trouvé dans la colonne A' });
+}
+
+// Fonction utilitaire pour parser les dates reçues (format yyyy-mm-dd)
+function parseInputDate(dateStr) {
+  if (!dateStr) return new Date();
+  try {
+    var parts = dateStr.split('-');
+    if (parts.length === 3) {
+      // Les mois dans JS commencent à 0
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    return new Date(dateStr);
+  } catch(e) { return new Date(); }
 }
 
 function deleteTransaction(sheet, data) {
@@ -127,9 +142,18 @@ function getAllTransactions(sheet) {
        sheet.getRange(idx + 2, 1).setValue(row[0]);
     }
     
+    // ✅ On force le formatage de la date pour éviter les soucis de Timezone (décalage au jour précédent)
+    var dateVal = row[1];
+    var formattedDate = "";
+    if (dateVal instanceof Date) {
+      formattedDate = Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    } else {
+      formattedDate = String(dateVal);
+    }
+    
     return {
       id: String(row[0]),
-      date: row[1],
+      date: formattedDate,
       montant: row[2],
       income: row[3],
       categorie: row[4],
@@ -138,7 +162,7 @@ function getAllTransactions(sheet) {
     };
   })
   .filter(function(t) { return t.date || t.montant || t.income; })
-  .reverse(); // ✅ On inverse pour avoir les plus récents (bas du sheet) en premier
+  .reverse();
   
   return jsonResponse({ success: true, data: result });
 }
