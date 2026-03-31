@@ -122,12 +122,11 @@ function getAllTransactions(sheet) {
   var rows = data.slice(1);
   
   var result = rows.map(function(row, idx) {
-    if (!row[0]) { // Si pas d'ID en colonne A
+    if (!row[0]) {
        row[0] = Utilities.getUuid();
        sheet.getRange(idx + 2, 1).setValue(row[0]);
     }
     
-    // Mapping direct basé sur l'ordre A:ID, B:Date, C:Montant, D:Income, E:Cat, F:SousCat, G:Desc
     return {
       id: String(row[0]),
       date: row[1],
@@ -137,8 +136,10 @@ function getAllTransactions(sheet) {
       sous_categorie: row[5],
       description: row[6]
     };
-  }).filter(function(t) { return t.date || t.montant || t.income; });
-
+  })
+  .filter(function(t) { return t.date || t.montant || t.income; })
+  .reverse(); // ✅ On inverse pour avoir les plus récents (bas du sheet) en premier
+  
   return jsonResponse({ success: true, data: result });
 }
 

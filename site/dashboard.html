@@ -1023,7 +1023,7 @@
                 const data = await res.json();
                 if (data.success && Array.isArray(data.data)) {
                     // Cache the clean data
-                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0, 500)));
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data));
                     
                     // Combine remote and pending local
                     allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));

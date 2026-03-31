@@ -197,7 +197,7 @@
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success) {
-                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0,500)));
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data));
                     const merged = mergePendingChanges(data.data);
                     renderAnalyse(merged);
                     renderMonthlyChart(merged);

@@ -423,7 +423,7 @@
                 const data = await res.json();
                 if (data.success) {
                     // Cache the clean data
-                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0, 500)));
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data));
                     
                     allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
                     document.getElementById('sync-status').textContent = `Synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
