@@ -469,7 +469,7 @@
         // ═══════════════════════════════════════════════
         // CONFIG — URL Apps Script
         // ═══════════════════════════════════════════════
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzWr17HTlPVn1MaXeiA2XW0lhIJELK6ITukIrPeX_TqWHluBfwtEiMRUPJTzYI2RqZ6gA/exec";
 
         // ═══════════════════════════════════════════════
         // CATEGORIES & SUBCATEGORIES (with localStorage persistence)
@@ -1004,22 +1004,29 @@
         // ═══════════════════════════════════════════════
         // LOAD DATA FROM GOOGLE SHEETS
         // ═══════════════════════════════════════════════
+        // ═══════════════════════════════════════════════
+        // LOAD DATA FROM GOOGLE SHEETS
+        // ═══════════════════════════════════════════════
         async function loadData() {
             try {
                 // Initialize local tx from storage to show them immediately
                 const local = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
                 if (local.length > 0) {
-                    allTx = local;
+                    allTx = mergePendingChanges(local);
                     refresh();
                 }
+
+                document.getElementById('conn-dot').style.background = '#64748b';
+                document.getElementById('conn-text').textContent = 'Chargement...';
 
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success && Array.isArray(data.data)) {
+                    // Cache the clean data
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0, 500)));
+                    
                     // Combine remote and pending local
-                    allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
-                    // Cache for next time
-                    localStorage.setItem('local_tx_history', JSON.stringify(allTx.slice(0, 100)));
+                    allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
                     
                     document.getElementById('conn-dot').style.background = '#e63946';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
@@ -1032,17 +1039,46 @@
                         return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
                     });
 
-                    if (currentMonthTx.length === 0 && allTx.length > 0) {
+                    if (currentMonthTx.length === 0 && allTx.length > 0 && period === 'mois') {
                         selectAll();
                     } else {
-                        setPeriod('mois');
+                        refresh();
                     }
                 } else { throw new Error(data.error || 'Erreur'); }
             } catch (e) {
                 console.error(e);
                 document.getElementById('conn-dot').style.background = '#f87171';
                 document.getElementById('conn-text').textContent = '⚠️ Hors ligne';
+                // Even on error, try to show the absolute best we have (local + pending)
+                const local = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                allTx = mergePendingChanges(local);
+                refresh();
             }
+            // Toujours essayer de vider la file d'attente au chargement
+            processQueue();
+        }
+
+        function mergePendingChanges(baseData) {
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            if (queue.length === 0) return baseData;
+            
+            let data = [...baseData];
+            // On traite la queue (FIFO) pour appliquer les changements dans l'ordre
+            queue.forEach(item => {
+                if (item.action === 'addTransaction') {
+                    // Add to list if not already there (rudimentary check)
+                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
+                    if (!exists) {
+                        data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                    }
+                } else if (item.action === 'updateTransaction') {
+                    const idx = data.findIndex(t => t.id === item.id);
+                    if (idx > -1) data[idx] = { ...data[idx], ...item };
+                } else if (item.action === 'deleteTransaction') {
+                    data = data.filter(t => t.id !== item.id);
+                }
+            });
+            return data;
         }
 
         async function forceSync() {
@@ -1179,39 +1215,51 @@
                 action: editingId ? 'updateTransaction' : 'addTransaction'
             };
 
-            // OFFLINE SUPPORT
+            // OFFLINE SUPPORT / QUEUE
             const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
             queue.push(payload);
             localStorage.setItem('pending_tx', JSON.stringify(queue));
 
-            if (navigator.onLine) {
-                processQueue();
-            } else {
-                showToast("📴 Mis en attente (Hors ligne)");
-            }
+            showToast(editingId ? "💾 Enregistré localement" : "📤 Ajouté localement");
+            
+            // On relance la synchro en arrière plan
+            processQueue();
         }
 
+        let isProcessing = false;
         async function processQueue() {
-            if (!navigator.onLine) return;
+            if (isProcessing || !navigator.onLine) return;
             const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
             if (queue.length === 0) return;
 
+            isProcessing = true;
             const item = queue[0];
+            
             try {
-                const res = await fetch(SHEETS_API_URL, {
+                // On utilise mode: 'cors' (par défaut) pour mieux suivre les redirections de Google
+                // On envoie en text/plain pour éviter la requête OPTIONS (preflight) qui échoue souvent sur GAS
+                const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(item)
+                    body: JSON.stringify(item),
+                    headers: { 'Content-Type': 'text/plain' }
                 });
                 
-                // Si OK (mode: no-cors ne permet pas de voir la réponse mais on assume success si pas d'erreur), on retire
-                queue.shift();
-                localStorage.setItem('pending_tx', JSON.stringify(queue));
+                // Si on arrive ici, l'envoi a réussi (même si CORS râle sur la réponse, le POST est passé)
+                const currentQueue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+                currentQueue.shift();
+                localStorage.setItem('pending_tx', JSON.stringify(currentQueue));
                 
-                if (queue.length > 0) setTimeout(processQueue, 500);
-                else showToast('✅ Données synchronisées avec Google Sheets');
+                isProcessing = false;
+                if (currentQueue.length > 0) {
+                    setTimeout(processQueue, 500);
+                } else {
+                    showToast('✅ Synchronisé avec Google Sheets');
+                    setTimeout(loadData, 2000);
+                }
             } catch (err) {
-                console.warn("Retrying later...");
+                console.warn("Échec de synchro, on réessaiera plus tard...", err);
+                isProcessing = false;
+                // On ne shift pas la queue en cas d'erreur réseau pour pouvoir re-tenter
             }
         }
 

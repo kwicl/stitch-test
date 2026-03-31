@@ -260,7 +260,7 @@
     <div id="toast"></div>
 
     <script>
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzWr17HTlPVn1MaXeiA2XW0lhIJELK6ITukIrPeX_TqWHluBfwtEiMRUPJTzYI2RqZ6gA/exec";
 
         // ═══════════════════════════════════════════════
         // CATEGORIES
@@ -412,20 +412,93 @@
         // ═══════════════════════════════════════════════
         async function loadHistory() {
             try {
+                // Show cached data first while loading
+                const cached = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                if (cached.length > 0) {
+                    allTx = mergePendingChanges(cached.map((t, idx) => ({ ...t, index: idx })));
+                    renderTransactions();
+                }
+
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success) {
-                    allTx = data.data.map((t, idx) => ({ ...t, index: idx }));
+                    // Cache the clean data
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0, 500)));
+                    
+                    allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
                     document.getElementById('sync-status').textContent = `Synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
                     renderTransactions();
                 }
             } catch (e) {
-                document.getElementById('history-list').innerHTML = `<div class="p-10 text-center text-red-400">Impossible de charger les données.<br>Vérifiez votre connexion.</div>`;
+                console.error(e);
+                // Fallback to absolute local + pending
+                const cached = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                allTx = mergePendingChanges(cached.map((t, idx) => ({ ...t, index: idx })));
+                if (allTx.length === 0) {
+                    document.getElementById('history-list').innerHTML = `<div class="p-10 text-center text-red-400">Impossible de charger les données.<br>Vérifiez votre connexion.</div>`;
+                } else {
+                    renderTransactions();
+                }
+            }
+            processQueue();
+        }
+
+        function mergePendingChanges(baseData) {
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            if (queue.length === 0) return baseData;
+            
+            let data = [...baseData];
+            queue.forEach(item => {
+                if (item.action === 'addTransaction') {
+                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
+                    if (!exists) data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                } else if (item.action === 'updateTransaction') {
+                    const idx = data.findIndex(t => t.id === item.id);
+                    if (idx > -1) data[idx] = { ...data[idx], ...item };
+                } else if (item.action === 'deleteTransaction') {
+                    data = data.filter(t => t.id !== item.id);
+                }
+            });
+            return data;
+        }
+
+        let isProcessing = false;
+        async function processQueue() {
+            if (isProcessing || !navigator.onLine) return;
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            if (queue.length === 0) return;
+
+            isProcessing = true;
+            const item = queue[0];
+            try {
+                // On utilise mode: 'cors' (par défaut) pour mieux suivre les redirections de Google
+                // On envoie en text/plain pour éviter la requête OPTIONS (preflight) qui échoue souvent sur GAS
+                await fetch(SHEETS_API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(item),
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                
+                const currentQueue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+                currentQueue.shift();
+                localStorage.setItem('pending_tx', JSON.stringify(currentQueue));
+                
+                isProcessing = false;
+                if (currentQueue.length > 0) {
+                    setTimeout(processQueue, 500);
+                } else {
+                    showToast('✅ Synchronisé avec Google Sheets');
+                    setTimeout(loadHistory, 3000);
+                }
+            } catch (err) {
+                console.warn("Échec de synchro, on réessaiera plus tard...", err);
+                isProcessing = false;
             }
         }
 
         async function forceSync() {
             document.getElementById('sync-status').textContent = 'Sync...';
+            showToast("🔄 Synchronisation...");
             await loadHistory();
         }
 
@@ -563,14 +636,19 @@
         async function deleteTx() {
             const id = document.getElementById('f-id').value;
             if (!id || !confirm('Supprimer cette transaction ?')) return;
+            
+            // OPTIMISTIC
             allTx = allTx.filter(t => t.id !== id);
             renderTransactions();
             closeModal();
-            showToast('🗑️ Suppression...');
-            try {
-                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteTransaction', id }) });
-                showToast('🗑️ Transaction supprimée !');
-            } catch (e) { showToast('⚠️ Erreur réseau', true); }
+            
+            const payload = { action: 'deleteTransaction', id: id };
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            queue.push(payload);
+            localStorage.setItem('pending_tx', JSON.stringify(queue));
+            
+            showToast('🗑️ Supprimé localement');
+            processQueue();
         }
 
         async function submitTx(e) {
@@ -592,6 +670,7 @@
                 description: document.getElementById('f-desc').value
             };
 
+            // OPTIMISTIC UI
             if (editingId) {
                 const idx = allTx.findIndex(t => t.id === editingId);
                 if (idx > -1) allTx[idx] = { ...allTx[idx], ...newTx };
@@ -602,24 +681,22 @@
             closeModal();
 
             const payload = { ...newTx, action: editingId ? 'updateTransaction' : 'addTransaction' };
-            showToast(editingId ? '💾 Mise à jour...' : '📤 Ajout en cours...');
-
-            try {
-                await fetch(SHEETS_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                showToast(editingId ? '✅ Transaction mise à jour !' : '✅ Transaction ajoutée !');
-            } catch (e) {
-                const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
-                queue.push(payload);
-                localStorage.setItem('pending_tx', JSON.stringify(queue));
-                showToast('📴 Mis en attente (hors ligne)');
-            }
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            queue.push(payload);
+            localStorage.setItem('pending_tx', JSON.stringify(queue));
+            
+            showToast(editingId ? '💾 Changement enregistré' : '📤 Ajout en cours...');
+            processQueue();
         }
+
+        window.addEventListener('online', processQueue);
 
         // ═══════════════════════════════════════════════
         // TOAST
         // ═══════════════════════════════════════════════
         function showToast(msg, err = false) {
             const t = document.getElementById('toast');
+            if (!t) return;
             t.textContent = msg;
             t.className = 'show' + (err ? ' error' : '');
             clearTimeout(t._timer);

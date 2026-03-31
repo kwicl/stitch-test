@@ -166,7 +166,7 @@
     </nav>
 
     <script>
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzhqd7wUttqGw-7AFiXp1zOi5B6xBSeuvVvid8Y3PskHvpea1KguHPEfMR_p_Z9M-sVKA/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzWr17HTlPVn1MaXeiA2XW0lhIJELK6ITukIrPeX_TqWHluBfwtEiMRUPJTzYI2RqZ6gA/exec";
 
         function cleanAmount(v) {
             if (typeof v === 'number') return v;
@@ -216,15 +216,43 @@
 
         async function loadData() {
             try {
+                // Show cached first
+                const cached = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                if (cached.length > 0) {
+                    const merged = mergePendingChanges(cached);
+                    renderBudgets(merged);
+                    renderBudgetChart(merged);
+                }
+
                 const res = await fetch(`${SHEETS_API_URL}?action=getAll`);
                 const data = await res.json();
                 if (data.success) {
-                    renderBudgets(data.data);
-                    renderBudgetChart(data.data);
+                    localStorage.setItem('local_tx_history', JSON.stringify(data.data.slice(0, 500)));
+                    const merged = mergePendingChanges(data.data);
+                    renderBudgets(merged);
+                    renderBudgetChart(merged);
                 }
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        function mergePendingChanges(baseData) {
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            if (queue.length === 0) return baseData;
+            let data = [...baseData];
+            queue.forEach(item => {
+                if (item.action === 'addTransaction') {
+                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
+                    if (!exists) data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                } else if (item.action === 'updateTransaction') {
+                    const idx = data.findIndex(t => t.id === item.id);
+                    if (idx > -1) data[idx] = { ...data[idx], ...item };
+                } else if (item.action === 'deleteTransaction') {
+                    data = data.filter(t => t.id !== item.id);
+                }
+            });
+            return data;
         }
 
         function renderBudgets(tx) {

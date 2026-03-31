@@ -1,134 +1,89 @@
 // ============================================================
-// SMART EXPENSES — Google Apps Script
-// Copiez-collez ce code dans votre Apps Script Google
-// puis cliquez sur "Déployer" → "Gérer les déploiements"
-// → sélectionnez votre déploiement → Modifier → Nouvelle version
+// SMART EXPENSES — Google Apps Script (VERSION 2.0)
+// ============================================================
+// INSTRUCTIONS :
+// 1. Copiez ce code dans votre éditeur Google Apps Script.
+// 2. Cliquez sur "Déployer" → "Nouveau déploiement".
+// 3. Type : Application Web.
+// 4. Exécuter en tant que : "Moi" (votre compte).
+// 5. Qui a accès : "Tout le monde" (indispensable).
+// 6. Copiez l'URL générée et mettez-la dans vos fichiers HTML.
 // ============================================================
 
 function doGet(e) {
   var action = e.parameter.action;
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-
+  var sheet = getTargetSheet();
+  
   if (action === 'getAll') {
     return getAllTransactions(sheet);
   }
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: false, error: 'Action inconnue' }))
-    .setMimeType(ContentService.MimeType.JSON);
+  
+  return jsonResponse({ success: false, error: 'Action GET inconnue' });
 }
 
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var sheet = getTargetSheet();
+    var action = data.action;
 
-    if (data.action === 'addTransaction') {
+    console.log("Action reçue: " + action + " - ID: " + data.id);
+
+    if (action === 'addTransaction') {
       return addTransaction(sheet, data);
     }
-
-    if (data.action === 'updateTransaction') {
+    if (action === 'updateTransaction') {
       return updateTransaction(sheet, data);
     }
-
-    if (data.action === 'deleteTransaction') {
+    if (action === 'deleteTransaction') {
       return deleteTransaction(sheet, data);
     }
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: 'Action inconnue' }))
-      .setMimeType(ContentService.MimeType.JSON);
-
+    return jsonResponse({ success: false, error: 'Action POST inconnue: ' + action });
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    console.error("Erreur doPost: " + err.toString());
+    return jsonResponse({ success: false, error: "Erreur serveur: " + err.toString() });
   }
 }
 
-function addTransaction(sheet, data) {
-  // Générer un ID unique
-  var id = Utilities.getUuid();
-
-  // ✅ La sous-catégorie remplace le moyen de paiement (colonne F)
-  // On accepte les deux noms de champs pour la compatibilité
-  var sousCat = data.sous_categorie || data.paiement || '';
-
-  // ✅ Routage correct des montants :
-  // - Dépense → colonne C (montant)
-  // - Revenu  → colonne D (income)
-  var montant = data.montant !== '' && data.montant != null ? data.montant : '';
-  var income  = data.income  !== '' && data.income  != null ? data.income  : '';
-
-  // Construire la ligne dans l'ordre exact des colonnes du sheet :
-  // A: ID | B: Date | C: Montant dépensé | D: Income | E: Catégorie | F: Sous-catégorie | G: Description
-  var row = [
-    id,                          // A — ID
-    data.date || '',             // B — Date
-    montant,                     // C — Montant dépensé (vide si revenu)
-    income,                      // D — Income / Revenu (vide si dépense)
-    data.categorie || '',        // E — Catégorie
-    sousCat,                     // F — Sous-catégorie ← (anciennement Moyen de paiement)
-    (data.lieu || '') + (data.lieu && data.description ? ' — ' : '') + (data.description || '')  // G — Description
-  ];
-
-  sheet.appendRow(row);
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true, id: id }))
-    .setMimeType(ContentService.MimeType.JSON);
+// Sélectionner la première feuille quels que soient les onglets
+function getTargetSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheets()[0]; // On prend toujours la première feuille
+  return sheet;
 }
 
-function getAllTransactions(sheet) {
-  var data = sheet.getDataRange().getValues();
-  var headers = data[0];
-  var rows = data.slice(1);
-  var idIndex = -1;
-  headers.forEach(function(h, i) {
-    if (String(h).toLowerCase().trim() === 'id') idIndex = i;
-  });
-  if (idIndex === -1) idIndex = 0; // Assuming ID is column A
-
-  var result = rows.map(function(row, idx) {
-    if (!row[idIndex]) {
-       row[idIndex] = Utilities.getUuid();
-       sheet.getRange(idx + 2, idIndex + 1).setValue(row[idIndex]);
-    }
-    
-    var obj = {};
-    headers.forEach(function(h, i) {
-      obj[String(h).toLowerCase().trim()] = row[i];
-    });
-
-    // Normaliser les noms de champs pour l'app
-    return {
-      id:             obj['id'] || '',
-      date:           obj['date'] || '',
-      montant:        obj['quel est le montant dépensé?'] || obj['montant'] || '',
-      income:         obj['income'] || '',
-      categorie:      obj['quelle est la catégorie de la dépense?'] || obj['catégorie'] || obj['categorie'] || '',
-      // ✅ Lire sous_categorie depuis colonne F (anciennement moyen de paiement)
-      sous_categorie: obj['sous-catégorie de dépense'] || obj['quel moyen de paiement a été utilisé?'] || obj['sous_categorie'] || obj['paiement'] || '',
-      paiement:       obj['sous-catégorie de dépense'] || obj['quel moyen de paiement a été utilisé?'] || obj['sous_categorie'] || obj['paiement'] || '',
-      description:    obj['description lieu ou note'] || obj['description'] || obj['lieu'] || '',
-      lieu:           obj['description lieu ou note'] || obj['lieu'] || '',
-    };
-  }).filter(function(t) { return t.date || t.montant || t.income; });
-
-  return successResponse({ data: result });
+function addTransaction(sheet, data) {
+  var id = Utilities.getUuid();
+  var montant = data.montant !== '' && data.montant != null ? data.montant : '';
+  var income = data.income !== '' && data.income != null ? data.income : '';
+  var sousCat = data.sous_categorie || data.paiement || '';
+  
+  var row = [
+    id,
+    data.date || '',
+    montant,
+    income,
+    data.categorie || '',
+    sousCat,
+    (data.lieu || '') + (data.lieu && data.description ? ' — ' : '') + (data.description || '')
+  ];
+  
+  sheet.appendRow(row);
+  return jsonResponse({ success: true, action: 'add', id: id });
 }
 
 function updateTransaction(sheet, data) {
-  var id = data.id;
-  if (!id) return errorResponse('ID manquant');
+  var id = String(data.id);
+  if (!id) return jsonResponse({ success: false, error: 'ID manquant' });
 
   var rows = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(id)) {
+    if (String(rows[i][0]) === id) {
       var rowIndex = i + 1;
-      var sousCat = data.sous_categorie || data.paiement || '';
       var montant = data.montant !== '' && data.montant != null ? data.montant : '';
-      var income  = data.income  !== '' && data.income  != null ? data.income  : '';
+      var income = data.income !== '' && data.income != null ? data.income : '';
+      var sousCat = data.sous_categorie || data.paiement || '';
       
       var newRow = [
         id,
@@ -141,35 +96,55 @@ function updateTransaction(sheet, data) {
       ];
       
       sheet.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
-      return successResponse({ id: id });
+      return jsonResponse({ success: true, action: 'update', id: id });
     }
   }
-  return errorResponse('ID non trouvé');
+  return jsonResponse({ success: false, error: 'ID ' + id + ' non trouvé dans la colonne A' });
 }
 
 function deleteTransaction(sheet, data) {
-  var id = data.id;
-  if (!id) return errorResponse('ID manquant');
-
+  var id = String(data.id);
   var rows = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(id)) {
+    if (String(rows[i][0]) === id) {
       sheet.deleteRow(i + 1);
-      return successResponse({ id: id });
+      return jsonResponse({ success: true, action: 'delete', id: id });
     }
   }
-  return errorResponse('ID non trouvé');
+  return jsonResponse({ success: false, error: 'ID ' + id + ' non trouvé' });
 }
 
-function successResponse(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true, ...data }))
-    .setMimeType(ContentService.MimeType.JSON);
+function getAllTransactions(sheet) {
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 1) return jsonResponse({ success: true, data: [] });
+  
+  var headers = data[0];
+  var rows = data.slice(1);
+  
+  var result = rows.map(function(row, idx) {
+    if (!row[0]) { // Si pas d'ID en colonne A
+       row[0] = Utilities.getUuid();
+       sheet.getRange(idx + 2, 1).setValue(row[0]);
+    }
+    
+    // Mapping direct basé sur l'ordre A:ID, B:Date, C:Montant, D:Income, E:Cat, F:SousCat, G:Desc
+    return {
+      id: String(row[0]),
+      date: row[1],
+      montant: row[2],
+      income: row[3],
+      categorie: row[4],
+      sous_categorie: row[5],
+      description: row[6]
+    };
+  }).filter(function(t) { return t.date || t.montant || t.income; });
+
+  return jsonResponse({ success: true, data: result });
 }
 
-function errorResponse(msg) {
+function jsonResponse(obj) {
   return ContentService
-    .createTextOutput(JSON.stringify({ success: false, error: msg }))
+    .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
