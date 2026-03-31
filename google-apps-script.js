@@ -130,11 +130,15 @@ function deleteTransaction(sheet, data) {
 }
 
 function getAllTransactions(sheet) {
-  var data = sheet.getDataRange().getValues();
-  if (data.length < 1) return jsonResponse({ success: true, data: [] });
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+  var displayValues = range.getDisplayValues(); // ✅ Pour lire les dates telles qu'affichées
   
-  var headers = data[0];
-  var rows = data.slice(1);
+  if (values.length < 1) return jsonResponse({ success: true, data: [] });
+  
+  var headers = values[0];
+  var rows = values.slice(1);
+  var dispRows = displayValues.slice(1);
   
   var result = rows.map(function(row, idx) {
     if (!row[0]) {
@@ -142,18 +146,12 @@ function getAllTransactions(sheet) {
        sheet.getRange(idx + 2, 1).setValue(row[0]);
     }
     
-    // ✅ On force le formatage de la date pour éviter les soucis de Timezone (décalage au jour précédent)
-    var dateVal = row[1];
-    var formattedDate = "";
-    if (dateVal instanceof Date) {
-      formattedDate = Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
-    } else {
-      formattedDate = String(dateVal);
-    }
+    // On prend la date affichée (colonne B / index 1) pour éviter les décalages de Timezone
+    var dateVal = dispRows[idx][1]; 
     
     return {
       id: String(row[0]),
-      date: formattedDate,
+      date: dateVal, // ✅ String formaté type "2026-04-01" ou "01/04/2026"
       montant: row[2],
       income: row[3],
       categorie: row[4],
