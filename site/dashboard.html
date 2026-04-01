@@ -318,7 +318,7 @@
                                 class="text-[10px] text-slate-400">Épargne</span></div>
                     </div>
                 </div>
-                <div style="position:relative;height:180px;">
+                <div style="position:relative;height:280px;">
                     <canvas id="cashflow-chart"></canvas>
                 </div>
                 <p id="chart-empty" class="hidden text-center py-8 text-slate-500 text-sm">Aucune donnée pour cette
@@ -331,7 +331,7 @@
             <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
                 <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par
                     catégorie</p>
-                <div style="position:relative; min-height:200px;">
+                <div style="position:relative; min-height:280px;">
                     <canvas id="category-chart"></canvas>
                 </div>
             </div>
@@ -1036,8 +1036,17 @@
                     localStorage.setItem('local_tx_history', JSON.stringify(data.data));
                     
                     // Combine remote and pending local
-                    allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
+                    let merged = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
                     
+                    // ✅ Tri par date (plus récent en haut)
+                    merged.sort((a, b) => {
+                        const da = parseDt(a.date);
+                        const db = parseDt(b.date);
+                        if (da && db && db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
+                        return (a.index || 0) - (b.index || 0); 
+                    });
+                    
+                    allTx = merged;
                     document.getElementById('conn-dot').style.background = '#e63946';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
                     buildDropdown();

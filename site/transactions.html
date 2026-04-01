@@ -429,7 +429,14 @@
                     // Cache the clean data
                     localStorage.setItem('local_tx_history', JSON.stringify(data.data));
                     
-                    allTx = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
+                    let merged = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
+                    merged.sort((a, b) => {
+                        const da = parseDt(a.date), db = parseDt(b.date);
+                        if (da && db && db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
+                        return (a.index || 0) - (b.index || 0);
+                    });
+                    
+                    allTx = merged;
                     document.getElementById('sync-status').textContent = `Synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
                     renderTransactions();
                 }
