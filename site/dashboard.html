@@ -337,6 +337,19 @@
             </div>
         </section>
 
+        <!-- MONTHLY RECAP CHART FOR CURRENT YEAR -->
+        <section class="px-4 pb-6">
+            <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest">Récapitulatif Annuel</p>
+                    <p id="yearly-chart-title" class="text-[10px] font-bold text-slate-400">Année en cours</p>
+                </div>
+                <div style="position:relative; height:200px;">
+                    <canvas id="yearly-monthly-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- RECENT TRANSACTIONS -->
         <section class="px-4 pb-6">
             <div class="flex items-center justify-between mb-3">
@@ -412,16 +425,28 @@
                     <option value="">💸 Dépense</option>
                     <option value="Revenu">💰 Revenu</option>
                 </select>
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️
-                    Catégorie</label>
-                <select id="f-categorie" onchange="onCatChange()">
-                    <option value="">Choisir une catégorie…</option>
-                </select>
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🔖 Sous-catégorie</label>
-                <select id="f-sous-cat" onchange="onSubCatChange()">
-                    <option value="">Choisir une sous-catégorie…</option>
-                </select>
-                <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
+                <div id="cat-group">
+                    <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️ Catégorie</label>
+                    <select id="f-categorie" onchange="onCatChange()">
+                        <option value="">Choisir une catégorie…</option>
+                    </select>
+                </div>
+                
+                <div id="sub-cat-container" class="mb-4">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">🔖 Sous-catégorie</label>
+                        <button type="button" id="btn-show-subs" onclick="showSubCats()" class="text-[10px] text-primary underline">Modifier</button>
+                    </div>
+                    <div id="sub-cat-wrapper" style="display:none;">
+                        <select id="f-sous-cat" onchange="onSubCatChange()">
+                            <option value="">Choisir une sous-catégorie…</option>
+                        </select>
+                        <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
+                    </div>
+                    <div id="sub-cat-display" class="text-sm text-slate-100 bg-primary/5 p-2 rounded-lg border border-primary/10">
+                        Cliquez sur modifier...
+                    </div>
+                </div>
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu</label>
                 <input type="text" id="f-lieu" placeholder="Ex: Marché central…" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝
@@ -469,7 +494,7 @@
         // ═══════════════════════════════════════════════
         // CONFIG — URL Apps Script
         // ═══════════════════════════════════════════════
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzso4_j0RnSIIKr9GFNcrondk6LbiSEb-FNaiOoYM305JcYOlZIT83kplbnt10h4Qggug/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwihfIDslI5RPSG8kHLhXyArufZOC1QsLCCkNRTXh5LH93DmixzI6vtjJnioHn_vtncMQ/exec";
 
         // ═══════════════════════════════════════════════
         // CATEGORIES & SUBCATEGORIES (with localStorage persistence)
@@ -546,35 +571,45 @@
             if (currentVal) sel.value = currentVal;
         }
 
-        // Populate sub-category dropdown based on selected category
         function onCatChange() {
             const cat = document.getElementById('f-categorie').value;
             const subSel = document.getElementById('f-sous-cat');
             const customInp = document.getElementById('f-sous-cat-custom');
-            const subs = SUBCATEGORIES[cat] || [];
+            const subDisp = document.getElementById('sub-cat-display');
             
+            const subs = SUBCATEGORIES[cat] || [];
             subSel.innerHTML = '<option value="">Choisir une sous-catégorie…</option>' +
                 subs.map(s => `<option value="${s}">${s}</option>`).join('') +
                 '<option value="__custom__">✏️ Saisir manuellement…</option>';
             
-            // Default to first sub-category if available
             if (subs.length > 0) {
                 subSel.value = subs[0];
+                subDisp.textContent = subs[0];
+            } else {
+                subDisp.textContent = cat || '...';
             }
             
-            subSel.style.display = 'block';
             customInp.style.display = 'none';
             customInp.value = '';
+        }
+
+        function showSubCats() {
+            document.getElementById('sub-cat-wrapper').style.display = 'block';
+            document.getElementById('sub-cat-display').style.display = 'none';
+            document.getElementById('btn-show-subs').style.display = 'none';
         }
 
         function onSubCatChange() {
             const subSel = document.getElementById('f-sous-cat');
             const customInp = document.getElementById('f-sous-cat-custom');
+            const subDisp = document.getElementById('sub-cat-display');
+            
             if (subSel.value === '__custom__') {
                 customInp.style.display = 'block';
                 customInp.focus();
             } else {
                 customInp.style.display = 'none';
+                subDisp.textContent = subSel.value || document.getElementById('f-categorie').value;
             }
         }
 
@@ -599,6 +634,15 @@
         let period = 'mois';
         let chart = null;
         let barChart = null;
+        let yearlyChart = null;
+
+        function fDateLocal(dt) {
+            if (!dt) return '';
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
 
         // ═══════════════════════════════════════════════
         // UTILS
@@ -879,6 +923,104 @@
             });
         }
 
+        function updateYearlyMonthlyChart() {
+            const canvas = document.getElementById('yearly-monthly-chart');
+            if (!canvas) return;
+
+            let currentYear = new Date().getFullYear();
+            
+            // Check if we have transactions in the current year
+            const currentYearTx = allTx.filter(t => {
+                const d = parseDt(t.date);
+                return d && d.getFullYear() === currentYear;
+            });
+            
+            // Fallback to most recent year with data if current year is empty
+            if (currentYearTx.length === 0 && allTx.length > 0) {
+                let maxYear = 0;
+                allTx.forEach(t => {
+                    const d = parseDt(t.date);
+                    if (d && d.getFullYear() > maxYear) maxYear = d.getFullYear();
+                });
+                if (maxYear > 0) currentYear = maxYear;
+            }
+
+            const titleEl = document.getElementById('yearly-chart-title');
+            if (titleEl) titleEl.textContent = 'Année ' + currentYear;
+
+            const monthlyTotals = Array(12).fill(0);
+            allTx.forEach(t => {
+                const d = parseDt(t.date);
+                if (!d || d.getFullYear() !== currentYear) return;
+                if (isRev(t)) return; // Only expenses
+                const m = d.getMonth(); // 0 to 11
+                monthlyTotals[m] += getVal(t);
+            });
+
+            const labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+
+            const drawValuesPlugin = {
+                id: 'drawYearlyValues',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const val = dataset.data[index];
+                                if (val === 0) return;
+                                const text = (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
+                                ctx.font = 'bold 9px Inter';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillStyle = '#ff4d5a'; // Accent red color for values
+                                ctx.fillText(text, element.x, element.y - 4);
+                            });
+                        }
+                    });
+                }
+            };
+
+            if (yearlyChart) yearlyChart.destroy();
+            yearlyChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Dépenses mensuelles',
+                        data: monthlyTotals,
+                        backgroundColor: 'rgba(230, 57, 70, 0.4)', // Accent bordeaux red translucent
+                        borderColor: '#e63946', // Accent red
+                        borderWidth: 1.5,
+                        borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+                        barThickness: 16,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: c => fmtDH(c.parsed.y) } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#f8fafc', font: { size: 9 } },
+                            grid: { display: false },
+                            border: { display: false }
+                        },
+                        y: {
+                            display: false,
+                            min: 0
+                        }
+                    }
+                },
+                plugins: [drawValuesPlugin]
+            });
+        }
+
         // ═══════════════════════════════════════════════
         // TRANSACTION LIST
         // ═══════════════════════════════════════════════
@@ -976,6 +1118,7 @@
             updateStats(tx);
             updateChart(tx);
             updateCategoryChart(tx);
+            updateYearlyMonthlyChart();
             updateTxList(tx);
         }
 
@@ -1038,12 +1181,12 @@
                     // Combine remote and pending local
                     let merged = mergePendingChanges(data.data.map((t, idx) => ({ ...t, index: idx })));
                     
-                    // ✅ Tri par date (plus récent en haut)
+                    // ✅ Tri par date (plus récent en haut) + index décroissant pour même jour
                     merged.sort((a, b) => {
                         const da = parseDt(a.date);
                         const db = parseDt(b.date);
                         if (da && db && db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
-                        return (a.index || 0) - (b.index || 0); 
+                        return (b.index || 0) - (a.index || 0); 
                     });
                     
                     allTx = merged;
@@ -1082,19 +1225,19 @@
             if (queue.length === 0) return baseData;
             
             let data = [...baseData];
-            // On traite la queue (FIFO) pour appliquer les changements dans l'ordre
             queue.forEach(item => {
                 if (item.action === 'addTransaction') {
-                    // Add to list if not already there (rudimentary check)
-                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
+                    // On vérifie si l'ID existe déjà dans les données récupérées
+                    const exists = data.find(t => String(t.id) === String(item.id));
                     if (!exists) {
-                        data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                        data.unshift(item);
                     }
                 } else if (item.action === 'updateTransaction') {
-                    const idx = data.findIndex(t => t.id === item.id);
+                    const idx = data.findIndex(t => String(t.id) === String(item.id));
                     if (idx > -1) data[idx] = { ...data[idx], ...item };
+                    else data.unshift(item); // Si on ne le trouve pas encore dans les données distantes
                 } else if (item.action === 'deleteTransaction') {
-                    data = data.filter(t => t.id !== item.id);
+                    data = data.filter(t => String(t.id) !== String(item.id));
                 }
             });
             return data;
@@ -1114,21 +1257,32 @@
             // Reset to "New" state by default
             document.getElementById('modal-box').querySelector('h2').textContent = "➕ Nouvelle transaction";
             document.getElementById('f-id').value = '';
-            document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-date').value = fDateLocal(new Date());
+            
+            // Valeurs par défaut : Café
             populateCatSelect();
+            document.getElementById('f-categorie').value = 'Café';
             onCatChange();
+            
+            // Reset UI sous-cat
+            document.getElementById('sub-cat-wrapper').style.display = 'none';
+            document.getElementById('sub-cat-display').style.display = 'block';
+            document.getElementById('btn-show-subs').style.display = 'block';
+
             document.getElementById('f-montant').value = '';
             document.getElementById('f-lieu').value = '';
             document.getElementById('f-desc').value = '';
             document.getElementById('f-income').value = '';
             document.getElementById('submit-label').textContent = "Enregistrer";
             document.getElementById('submit-icon').textContent = '✅';
+            document.getElementById('submit-btn').disabled = false;
             document.getElementById('delete-btn').style.display = 'none';
         }
         function closeModal() {
             document.getElementById('modal-overlay').classList.remove('open');
             document.getElementById('tx-form').reset();
             document.getElementById('f-sous-cat-custom').style.display = 'none';
+            document.getElementById('submit-btn').disabled = false;
         }
         function overlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
@@ -1148,7 +1302,7 @@
             document.getElementById('f-id').value = id;
             
             const dt = parseDt(t.date);
-            if (dt) document.getElementById('f-date').value = dt.toISOString().slice(0, 10);
+            if (dt) document.getElementById('f-date').value = fDateLocal(dt);
             
             document.getElementById('f-montant').value = getVal(t);
             document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
@@ -1164,16 +1318,22 @@
             
             if ([...subSel.options].some(o => o.value === targetSub)) {
                 subSel.value = targetSub;
+                document.getElementById('sub-cat-display').textContent = targetSub;
             } else {
                 subSel.value = '__custom__';
                 onSubCatChange();
                 document.getElementById('f-sous-cat-custom').value = targetSub;
+                document.getElementById('sub-cat-display').textContent = targetSub || '...';
             }
+            
+            // En mode édition, on montre les selects
+            showSubCats();
             
             document.getElementById('f-lieu').value = t.lieu || '';
             document.getElementById('f-desc').value = t.description || '';
             
             document.getElementById('submit-label').textContent = "Mettre à jour";
+            document.getElementById('submit-btn').disabled = false;
             document.getElementById('delete-btn').style.display = 'flex';
         }
 
@@ -1184,24 +1344,22 @@
             allTx = allTx.filter(t => t.id !== id);
             refresh();
             closeModal();
+
+            const payload = { id: id, action: 'deleteTransaction' };
+            const queue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
+            queue.push(payload);
+            localStorage.setItem('pending_tx', JSON.stringify(queue));
             
-            if (navigator.onLine) {
-                showToast("🗑️ Suppression...");
-                try {
-                    await fetch(SHEETS_API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: JSON.stringify({ action: 'deleteTransaction', id: id })
-                    });
-                    showToast("🗑️ Supprimé !");
-                } catch(e) { showToast("⚠️ Erreur réseau", true); }
-            } else {
-                showToast("⚠️ Connexion requise pour supprimer", true);
-            }
+            showToast("🗑️ Mis en attente de suppression");
+            processQueue();
         }
 
         async function submitTx(e) {
             e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            
             const editingId = document.getElementById('f-id').value;
             const isRevenu = document.getElementById('f-income').value === 'Revenu';
             const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
@@ -1209,7 +1367,7 @@
             const parentCat = document.getElementById('f-categorie').value;
 
             const newTx = {
-                id: editingId || '',
+                id: editingId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 date: document.getElementById('f-date').value,
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
@@ -1255,13 +1413,27 @@
             const item = queue[0];
             
             try {
-                // On utilise mode: 'cors' (par défaut) pour mieux suivre les redirections de Google
-                // On envoie en text/plain pour éviter la requête OPTIONS (preflight) qui échoue souvent sur GAS
                 const response = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(item),
                     headers: { 'Content-Type': 'text/plain' }
                 });
+                const resData = await response.json();
+
+                // Si c'était un ajout, on met à jour l'ID local pour éviter les duplicatas lors d'un futur edit
+                if (resData.success && resData.id && String(item.id).startsWith('id_')) {
+                    const idx = allTx.findIndex(t => String(t.id) === String(item.id));
+                    if (idx > -1) {
+                        allTx[idx].id = resData.id;
+                        // On met aussi à jour le cache local
+                        const cached = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                        const cIdx = cached.findIndex(t => String(t.id) === String(item.id));
+                        if (cIdx > -1) {
+                            cached[cIdx].id = resData.id;
+                            localStorage.setItem('local_tx_history', JSON.stringify(cached));
+                        }
+                    }
+                }
                 
                 // Si on arrive ici, l'envoi a réussi (même si CORS râle sur la réponse, le POST est passé)
                 const currentQueue = JSON.parse(localStorage.getItem('pending_tx') || '[]');

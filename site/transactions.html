@@ -227,15 +227,28 @@
                     <option value="">💸 Dépense</option>
                     <option value="Revenu">💰 Revenu</option>
                 </select>
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️ Catégorie</label>
-                <select id="f-categorie" onchange="onCatChange()">
-                    <option value="">Choisir une catégorie…</option>
-                </select>
-                <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🔖 Sous-catégorie</label>
-                <select id="f-sous-cat">
-                    <option value="">Choisir une sous-catégorie…</option>
-                </select>
-                <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
+                <div id="cat-group">
+                    <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">🏷️ Catégorie</label>
+                    <select id="f-categorie" onchange="onCatChange()">
+                        <option value="">Choisir une catégorie…</option>
+                    </select>
+                </div>
+                
+                <div id="sub-cat-container" class="mb-4">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">🔖 Sous-catégorie</label>
+                        <button type="button" id="btn-show-subs" onclick="showSubCats()" class="text-[10px] text-primary underline">Modifier</button>
+                    </div>
+                    <div id="sub-cat-wrapper" style="display:none;">
+                        <select id="f-sous-cat" onchange="onSubCatChange()">
+                            <option value="">Choisir une sous-catégorie…</option>
+                        </select>
+                        <input type="text" id="f-sous-cat-custom" placeholder="Ou saisir manuellement…" style="display:none;" />
+                    </div>
+                    <div id="sub-cat-display" class="text-sm text-slate-100 bg-primary/5 p-2 rounded-lg border border-primary/10">
+                        Cliquez sur modifier...
+                    </div>
+                </div>
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📍 Lieu</label>
                 <input type="text" id="f-lieu" placeholder="Ex: Marché central…" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📝 Description</label>
@@ -260,7 +273,7 @@
     <div id="toast"></div>
 
     <script>
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzso4_j0RnSIIKr9GFNcrondk6LbiSEb-FNaiOoYM305JcYOlZIT83kplbnt10h4Qggug/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwihfIDslI5RPSG8kHLhXyArufZOC1QsLCCkNRTXh5LH93DmixzI6vtjJnioHn_vtncMQ/exec";
 
         // ═══════════════════════════════════════════════
         // CATEGORIES
@@ -324,21 +337,42 @@
             const cat = document.getElementById('f-categorie').value;
             const subSel = document.getElementById('f-sous-cat');
             const customInp = document.getElementById('f-sous-cat-custom');
+            const subDisp = document.getElementById('sub-cat-display');
+            
             const subs = SUBCATEGORIES[cat] || [];
             subSel.innerHTML = '<option value="">Choisir une sous-catégorie…</option>' +
                 subs.map(s => `<option value="${s}">${s}</option>`).join('') +
                 '<option value="__custom__">✏️ Saisir manuellement…</option>';
-            if (subs.length > 0) subSel.value = subs[0];
-            subSel.style.display = 'block';
+            
+            if (subs.length > 0) {
+                subSel.value = subs[0];
+                subDisp.textContent = subs[0];
+            } else {
+                subDisp.textContent = cat || '...';
+            }
+            
             customInp.style.display = 'none';
             customInp.value = '';
+        }
+
+        function showSubCats() {
+            document.getElementById('sub-cat-wrapper').style.display = 'block';
+            document.getElementById('sub-cat-display').style.display = 'none';
+            document.getElementById('btn-show-subs').style.display = 'none';
         }
 
         function onSubCatChange() {
             const subSel = document.getElementById('f-sous-cat');
             const customInp = document.getElementById('f-sous-cat-custom');
-            if (subSel.value === '__custom__') { customInp.style.display = 'block'; customInp.focus(); }
-            else customInp.style.display = 'none';
+            const subDisp = document.getElementById('sub-cat-display');
+            
+            if (subSel.value === '__custom__') { 
+                customInp.style.display = 'block'; 
+                customInp.focus(); 
+            } else {
+                customInp.style.display = 'none';
+                subDisp.textContent = subSel.value || document.getElementById('f-categorie').value;
+            }
         }
 
         function getSelectedSubCat() {
@@ -414,6 +448,14 @@
         // ═══════════════════════════════════════════════
         // DATA LOADING
         // ═══════════════════════════════════════════════
+        function fDateLocal(dt) {
+            if (!dt) return '';
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
         async function loadHistory() {
             try {
                 // Show cached data first while loading
@@ -433,7 +475,7 @@
                     merged.sort((a, b) => {
                         const da = parseDt(a.date), db = parseDt(b.date);
                         if (da && db && db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
-                        return (a.index || 0) - (b.index || 0);
+                        return (b.index || 0) - (a.index || 0);
                     });
                     
                     allTx = merged;
@@ -461,13 +503,14 @@
             let data = [...baseData];
             queue.forEach(item => {
                 if (item.action === 'addTransaction') {
-                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
-                    if (!exists) data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                    const exists = data.find(t => String(t.id) === String(item.id));
+                    if (!exists) data.unshift(item);
                 } else if (item.action === 'updateTransaction') {
-                    const idx = data.findIndex(t => t.id === item.id);
+                    const idx = data.findIndex(t => String(t.id) === String(item.id));
                     if (idx > -1) data[idx] = { ...data[idx], ...item };
+                    else data.unshift(item);
                 } else if (item.action === 'deleteTransaction') {
-                    data = data.filter(t => t.id !== item.id);
+                    data = data.filter(t => String(t.id) !== String(item.id));
                 }
             });
             return data;
@@ -484,11 +527,27 @@
             try {
                 // On utilise mode: 'cors' (par défaut) pour mieux suivre les redirections de Google
                 // On envoie en text/plain pour éviter la requête OPTIONS (preflight) qui échoue souvent sur GAS
-                await fetch(SHEETS_API_URL, {
+                const resp = await fetch(SHEETS_API_URL, {
                     method: 'POST',
                     body: JSON.stringify(item),
                     headers: { 'Content-Type': 'text/plain' }
                 });
+                const resData = await resp.json();
+                
+                // Si c'était un ajout, on met à jour l'ID local pour éviter les duplicatas lors d'un futur edit
+                if (resData.success && resData.id && String(item.id).startsWith('id_')) {
+                    const idx = allTx.findIndex(t => String(t.id) === String(item.id));
+                    if (idx > -1) {
+                        allTx[idx].id = resData.id;
+                        // On met aussi à jour le cache local
+                        const cached = JSON.parse(localStorage.getItem('local_tx_history') || '[]');
+                        const cIdx = cached.findIndex(t => String(t.id) === String(item.id));
+                        if (cIdx > -1) {
+                            cached[cIdx].id = resData.id;
+                            localStorage.setItem('local_tx_history', JSON.stringify(cached));
+                        }
+                    }
+                }
                 
                 const currentQueue = JSON.parse(localStorage.getItem('pending_tx') || '[]');
                 currentQueue.shift();
@@ -582,15 +641,25 @@
             document.getElementById('modal-overlay').classList.add('open');
             document.getElementById('modal-title').textContent = '➕ Nouvelle transaction';
             document.getElementById('f-id').value = '';
-            document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-date').value = fDateLocal(new Date());
             document.getElementById('f-montant').value = '';
             document.getElementById('f-lieu').value = '';
             document.getElementById('f-desc').value = '';
             document.getElementById('f-income').value = '';
+            
+            // Valeurs par défaut demandées : Café
             populateCatSelect();
-            onCatChange();
+            document.getElementById('f-categorie').value = 'Café';
+            onCatChange(); 
+            
+            // Reset UI sous-cat
+            document.getElementById('sub-cat-wrapper').style.display = 'none';
+            document.getElementById('sub-cat-display').style.display = 'block';
+            document.getElementById('btn-show-subs').style.display = 'block';
+
             document.getElementById('submit-label').textContent = 'Enregistrer';
             document.getElementById('submit-icon').textContent = '✅';
+            document.getElementById('submit-btn').disabled = false;
             document.getElementById('delete-btn').style.display = 'none';
         }
 
@@ -598,6 +667,7 @@
             document.getElementById('modal-overlay').classList.remove('open');
             document.getElementById('tx-form').reset();
             document.getElementById('f-sous-cat-custom').style.display = 'none';
+            document.getElementById('submit-btn').disabled = false;
         }
 
         function overlayClick(e) {
@@ -617,7 +687,7 @@
             document.getElementById('f-id').value = id;
 
             const dt = parseDt(t.date);
-            if (dt) document.getElementById('f-date').value = dt.toISOString().slice(0, 10);
+            if (dt) document.getElementById('f-date').value = fDateLocal(dt);
 
             document.getElementById('f-montant').value = getVal(t);
             document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
@@ -631,16 +701,22 @@
             const targetSub = t.categorie;
             if ([...subSel.options].some(o => o.value === targetSub)) {
                 subSel.value = targetSub;
+                document.getElementById('sub-cat-display').textContent = targetSub;
             } else {
                 subSel.value = '__custom__';
                 onSubCatChange();
                 document.getElementById('f-sous-cat-custom').value = targetSub || '';
+                document.getElementById('sub-cat-display').textContent = targetSub || '...';
             }
+            
+            // En mode édition, on montre les selects
+            showSubCats();
 
             document.getElementById('f-lieu').value = t.lieu || '';
             document.getElementById('f-desc').value = t.description || '';
             document.getElementById('submit-label').textContent = 'Mettre à jour';
             document.getElementById('submit-icon').textContent = '💾';
+            document.getElementById('submit-btn').disabled = false;
             document.getElementById('delete-btn').style.display = 'flex';
         }
 
@@ -649,7 +725,7 @@
             if (!id || !confirm('Supprimer cette transaction ?')) return;
             
             // OPTIMISTIC
-            allTx = allTx.filter(t => t.id !== id);
+            allTx = allTx.filter(t => String(t.id) !== String(id));
             renderTransactions();
             closeModal();
             
@@ -658,12 +734,16 @@
             queue.push(payload);
             localStorage.setItem('pending_tx', JSON.stringify(queue));
             
-            showToast('🗑️ Supprimé localement');
+            showToast('🗑️ Mis en attente de suppression');
             processQueue();
         }
 
         async function submitTx(e) {
             e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            
             const editingId = document.getElementById('f-id').value;
             const isRevenu = document.getElementById('f-income').value === 'Revenu';
             const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
@@ -671,7 +751,7 @@
             const parentCat = document.getElementById('f-categorie').value;
 
             const newTx = {
-                id: editingId || '',
+                id: editingId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 date: document.getElementById('f-date').value,
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
@@ -683,7 +763,7 @@
 
             // OPTIMISTIC UI
             if (editingId) {
-                const idx = allTx.findIndex(t => t.id === editingId);
+                const idx = allTx.findIndex(t => String(t.id) === String(editingId));
                 if (idx > -1) allTx[idx] = { ...allTx[idx], ...newTx };
             } else {
                 allTx.unshift({ ...newTx, index: allTx.length });
@@ -696,7 +776,7 @@
             queue.push(payload);
             localStorage.setItem('pending_tx', JSON.stringify(queue));
             
-            showToast(editingId ? '💾 Changement enregistré' : '📤 Ajout en cours...');
+            showToast(editingId ? '💾 Changement mis en attente' : '📤 Ajout mis en attente');
             processQueue();
         }
 

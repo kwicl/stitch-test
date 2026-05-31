@@ -54,7 +54,18 @@ function getTargetSheet() {
 }
 
 function addTransaction(sheet, data) {
-  var id = Utilities.getUuid();
+  var id = data.id && !String(data.id).startsWith('id_') ? String(data.id) : Utilities.getUuid();
+  
+  // Anti-duplication : si l'ID est déjà présent, on fait un update à la place
+  if (data.id) {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) === String(data.id)) {
+        return updateTransaction(sheet, data);
+      }
+    }
+  }
+
   var montant = data.montant !== '' && data.montant != null ? data.montant : '';
   var income = data.income !== '' && data.income != null ? data.income : '';
   var sousCat = data.sous_categorie || data.paiement || '';
@@ -101,7 +112,10 @@ function updateTransaction(sheet, data) {
       return jsonResponse({ success: true, action: 'update', id: id });
     }
   }
-  return jsonResponse({ success: false, error: 'ID ' + id + ' non trouvé dans la colonne A' });
+  
+  // Si non trouvé mais qu'on demandait un update, on considère que c'est peut-être un nouvel ajout qui a perdu son ID
+  // ou on renvoie une erreur explicite. Ici on reste sur l'erreur pour débogage.
+  return jsonResponse({ success: false, error: 'ID ' + id + ' non trouvé' });
 }
 
 // Fonction utilitaire pour parser les dates reçues (format yyyy-mm-dd)

@@ -137,7 +137,7 @@
     </nav>
 
     <script>
-        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzso4_j0RnSIIKr9GFNcrondk6LbiSEb-FNaiOoYM305JcYOlZIT83kplbnt10h4Qggug/exec";
+        const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwihfIDslI5RPSG8kHLhXyArufZOC1QsLCCkNRTXh5LH93DmixzI6vtjJnioHn_vtncMQ/exec";
 
         function cleanAmount(v) {
             if (typeof v === 'number') return v;
@@ -215,13 +215,14 @@
             let data = [...baseData];
             queue.forEach(item => {
                 if (item.action === 'addTransaction') {
-                    const exists = data.find(t => t.date === item.date && getVal(t) === getVal(item) && t.description === item.description);
-                    if (!exists) data.unshift({ ...item, id: 'pending-' + Math.random().toString(36).substr(2, 9) });
+                    const exists = data.find(t => String(t.id) === String(item.id));
+                    if (!exists) data.unshift(item);
                 } else if (item.action === 'updateTransaction') {
-                    const idx = data.findIndex(t => t.id === item.id);
+                    const idx = data.findIndex(t => String(t.id) === String(item.id));
                     if (idx > -1) data[idx] = { ...data[idx], ...item };
+                    else data.unshift(item);
                 } else if (item.action === 'deleteTransaction') {
-                    data = data.filter(t => t.id !== item.id);
+                    data = data.filter(t => String(t.id) !== String(item.id));
                 }
             });
             return data;
