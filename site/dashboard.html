@@ -9,6 +9,7 @@
     <script src="assets/tailwind.js"></script>
     <script src="assets/chart.umd.min.js"></script>
     <link href="assets/inter.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
     <link href="assets/material.css" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
@@ -448,12 +449,11 @@
             </div>
         </section>
 
-        <!-- BAR CHART (HISTOGRAM) -->
+        <!-- CATEGORY CHART (ROSE / NIGHTINGALE) -->
         <section class="px-4 pb-6">
             <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
-                <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par
-                    catégorie</p>
-                <div style="position:relative; min-height:280px;">
+                <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par catégorie</p>
+                <div style="position:relative; min-height:360px;">
                     <canvas id="category-chart"></canvas>
                 </div>
             </div>
@@ -764,6 +764,7 @@
         let chart = null;
         let barChart = null;
         let yearlyChart = null;
+        let lastCategoryTx = [];
 
         function fDateLocal(dt) {
             if (!dt) return '';
@@ -955,13 +956,23 @@
         }
 
         function updateCategoryChart(tx) {
+            lastCategoryTx = tx;
             const canvas = document.getElementById('category-chart');
-            if (!tx.length) {
-                if (barChart) { barChart.destroy(); barChart = null; }
-            if (barChart) { barChart.destroy(); barChart = null; }
+            if (!canvas) return;
+
+            // Destroy Chart.js instance if it exists to avoid conflicts
+            if (barChart && typeof barChart.destroy === 'function') {
+                barChart.destroy();
+                barChart = null;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!tx || !tx.length) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 return;
             }
 
+            // Filter expenses
             const expenses = tx.filter(t => !isRev(t));
             const catTotals = {};
             expenses.forEach(t => {
@@ -969,86 +980,335 @@
                 catTotals[cat] = (catTotals[cat] || 0) + getVal(t);
             });
 
-            // On garde le top 7 pour la lisibilité sur mobile
+            // Keep top 7 categories by amount
             const sortedCats = Object.entries(catTotals)
                 .filter(c => c[1] > 0)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 7);
 
             if (sortedCats.length === 0) {
-                if (barChart) { barChart.destroy(); barChart = null; }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 return;
             }
 
-            const labels = sortedCats.map(c => c[0]);
-            const data = sortedCats.map(c => c[1]);
+            // Calculate total of top 7 categories for local proportions
+            const totalExpenses = sortedCats.reduce((sum, c) => sum + c[1], 0);
 
-            const drawValuesPlugin = {
-                id: 'drawValues',
-                afterDatasetsDraw(chart) {
-                    const { ctx } = chart;
-                    chart.data.datasets.forEach((dataset, i) => {
-                        const meta = chart.getDatasetMeta(i);
-                        if (!meta.hidden) {
-                            meta.data.forEach((element, index) => {
-                                const val = dataset.data[index];
-                                if (val === 0) return;
-                                const text = (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
-                                 ctx.font = 'bold 10px Inter';
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                // Inscription visible (blanc sur barres rouges, rouge sur fond sombre)
-                                if (element.base - element.y > 20) {
-                                    ctx.fillStyle = '#ffffff'; // Blanc pour visibilité sur la barre
-                                    ctx.fillText(text, element.x, element.y + 12);
-                                } else {
-                                    ctx.fillStyle = '#ff4d5a'; // Rouge clair pour visibilité sur fond noir
-                                    ctx.fillText(text, element.x, element.y - 8);
-                                }
-                            });
-                        }
-                    });
-                }
+            // Handle DPI Scaling for Razor-sharp rendering
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height || 360; 
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Layout Parameters
+            const cx = width / 2;
+            const cy = height / 2;
+            const minDimension = Math.min(width, height);
+            const maxRadius = minDimension * 0.34; 
+            const innerRadius = maxRadius * 0.33;  
+
+            // Vibrant palette adapted to application dark/neon theme
+            const colors = [
+                '#c77dff', // Rose/Purple (var(--primary))
+                '#ff6b9d', // Rose/Pink (var(--rose))
+                '#ff9500', // Orange (var(--orange))
+                '#a1e633', // Green (var(--green))
+                '#00b4d8', // Blue (var(--blue))
+                '#ef4444', // Red (var(--red))
+                '#ffbe0b'  // Yellow/Amber
+            ];
+
+            const categoryEmojis = {
+                'Alimentation': '🛒',
+                'Café': '☕',
+                'Transport': '🚗',
+                'Déplacement': '💼',
+                'Santé': '💊',
+                'Voyages': '✈️',
+                'Bien-être': '🧘',
+                'Maison et frais de service': '🏠',
+                'Maison & Serv.': '🏠',
+                'Électroménagers': '🔌',
+                'Éducation enfant': '🎓',
+                'Éduc. Enfants': '🎓',
+                'vetements enfants': '👕',
+                'Vêt. Enfants': '👕',
+                'Appartement': '🏢',
+                'appartement KENITRA': '🏢',
+                'appartement CASA': '🏢',
+                'villa tamesna': '🏡',
+                'investissement LOT SAHEL icl': '🪙',
+                'INVESTISSEMENT': '📈',
+                'Loisirs': '🎮',
+                'Salaire': '💵',
+                'Autres revenus': '💳',
+                'Autre': '💬'
             };
 
-            if (barChart) barChart.destroy();
-            barChart = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Dépenses',
-                        data: data,
-                        backgroundColor: 'rgba(230, 57, 70, 0.4)', // Red translucide
-                        borderColor: '#e63946', // Red primary
-                        borderWidth: 1.5,
-                        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
-                        barThickness: 28,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    indexAxis: 'x',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: { top: 20 } },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: c => fmtDH(c.parsed.y) } }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: '#f8fafc', font: { size: 9 }, maxRotation: 45, minRotation: 45 },
-                            grid: { display: false },
-                            border: { display: false }
-                        },
-                        y: {
-                            display: false,
-                            min: 0
+            function shortenCatName(name) {
+                if (name === 'Maison et frais de service') return 'Maison & Serv.';
+                if (name === 'investissement LOT SAHEL icl') return 'Lot Sahel';
+                if (name === 'appartement KENITRA') return 'Appart Kenitra';
+                if (name === 'appartement CASA') return 'Appart Casa';
+                if (name === 'villa tamesna') return 'Villa Tamesna';
+                if (name === 'vetements enfants') return 'Vêt. Enfants';
+                if (name === 'Éducation enfant') return 'Éduc. Enfants';
+                if (name.length > 12) return name.slice(0, 11) + '…';
+                return name;
+            }
+
+            // Slices Calculations
+            const maxValue = sortedCats[0][1];
+            let currentAngle = -Math.PI / 2; // Start at 12 o'clock
+
+            const slices = sortedCats.map((cat, i) => {
+                const name = cat[0];
+                const value = cat[1];
+                const percentage = totalExpenses > 0 ? (value / totalExpenses) * 100 : 0;
+                
+                const angleDelta = (percentage / 100) * Math.PI * 2;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angleDelta;
+                currentAngle = endAngle;
+
+                // Radius proportional to value relative to maximum value
+                // Clamp radius so even the smallest slice is visible (min 40% of maxRadius)
+                const relativeRadius = innerRadius + (maxRadius - innerRadius) * (0.35 + 0.65 * (value / maxValue));
+
+                return {
+                    name,
+                    value,
+                    percentage,
+                    startAngle,
+                    endAngle,
+                    radius: relativeRadius,
+                    color: colors[i % colors.length]
+                };
+            });
+
+            // 1. Draw Slices with Cream/Background borders for Exploded spacing
+            const gapAngle = 0.035; 
+            const sliceBorderColor = '#07010a'; // Dashboard dark background
+
+            slices.forEach(slice => {
+                if (slice.percentage <= 0) return;
+
+                const actualStart = slice.startAngle + gapAngle;
+                const actualEnd = slice.endAngle - gapAngle;
+                
+                if (actualEnd > actualStart) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, slice.radius, actualStart, actualEnd);
+                    ctx.arc(cx, cy, innerRadius, actualEnd, actualStart, true);
+                    ctx.closePath();
+
+                    ctx.fillStyle = slice.color;
+                    ctx.fill();
+
+                    ctx.strokeStyle = sliceBorderColor;
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
+
+            // 2. Draw Center Circle (Globe/Grid Aesthetic)
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#120317'; // Surface color
+            ctx.fill();
+            ctx.strokeStyle = '#c77dff'; // Primary purple border
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Vector Globe Grid inside Center Circle
+            ctx.strokeStyle = 'rgba(199, 125, 255, 0.45)'; 
+            ctx.lineWidth = 1;
+            const gr = innerRadius * 0.6; // radius of globe grid
+            
+            // Outer globe circle
+            ctx.beginPath();
+            ctx.arc(cx, cy, gr, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Equator (horizontal line)
+            ctx.beginPath();
+            ctx.moveTo(cx - gr, cy);
+            ctx.lineTo(cx + gr, cy);
+            ctx.stroke();
+
+            // Meridian (vertical line)
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - gr);
+            ctx.lineTo(cx, cy + gr);
+            ctx.stroke();
+
+            // Latitude lines (ellipses)
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, gr * 0.5, gr, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // 3. Draw Percentages Inside Slices (White bold, Roboto Condensed)
+            slices.forEach(slice => {
+                if (slice.percentage < 4) return; // Hide for small slices
+
+                const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+                const textDist = innerRadius + (slice.radius - innerRadius) * 0.55;
+                const px = cx + textDist * Math.cos(midAngle);
+                const py = cy + textDist * Math.sin(midAngle);
+
+                ctx.save();
+                ctx.fillStyle = '#07010a'; // Dark contrast on bright slice
+                const fontSize = Math.max(10, Math.min(14, Math.floor(slice.radius * 0.17)));
+                ctx.font = `bold ${fontSize}px "Roboto Condensed", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(Math.round(slice.percentage) + '%', px, py);
+                ctx.restore();
+            });
+
+            // 4. Draw Labels and Pointer Lines Outside with Collision Resolution
+            const leftLabels = [];
+            const rightLabels = [];
+
+            slices.forEach((slice, i) => {
+                const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+                const cosAngle = Math.cos(midAngle);
+                const sinAngle = Math.sin(midAngle);
+
+                const x1 = cx + slice.radius * cosAngle;
+                const y1 = cy + slice.radius * sinAngle;
+
+                // Tighter knee distance (10px instead of 18px) to make the graph itself larger
+                const kneeDist = slice.radius + 10;
+                const x2 = cx + kneeDist * cosAngle;
+                const y2 = cy + kneeDist * sinAngle;
+
+                const labelObj = {
+                    index: i,
+                    slice,
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    targetY: y2,
+                    currentY: y2,
+                    side: cosAngle > 0 ? 'right' : 'left',
+                    color: slice.color,
+                    midAngle
+                };
+
+                if (cosAngle > 0) {
+                    rightLabels.push(labelObj);
+                } else {
+                    leftLabels.push(labelObj);
+                }
+            });
+
+            // Sort labels vertically
+            rightLabels.sort((a, b) => a.targetY - b.targetY);
+            leftLabels.sort((a, b) => a.targetY - b.targetY);
+
+            // Collision Resolution parameters
+            const minSpacing = 24; 
+            const verticalMargin = 22; 
+
+            // Resolve Right Labels collisions
+            if (rightLabels.length > 0) {
+                for (let i = 1; i < rightLabels.length; i++) {
+                    if (rightLabels[i].currentY < rightLabels[i - 1].currentY + minSpacing) {
+                        rightLabels[i].currentY = rightLabels[i - 1].currentY + minSpacing;
+                    }
+                }
+                if (rightLabels[rightLabels.length - 1].currentY > height - verticalMargin) {
+                    rightLabels[rightLabels.length - 1].currentY = height - verticalMargin;
+                    for (let i = rightLabels.length - 2; i >= 0; i--) {
+                        if (rightLabels[i].currentY > rightLabels[i + 1].currentY - minSpacing) {
+                            rightLabels[i].currentY = rightLabels[i + 1].currentY - minSpacing;
                         }
                     }
-                },
-                plugins: [drawValuesPlugin]
+                }
+            }
+
+            // Resolve Left Labels collisions
+            if (leftLabels.length > 0) {
+                for (let i = 1; i < leftLabels.length; i++) {
+                    if (leftLabels[i].currentY < leftLabels[i - 1].currentY + minSpacing) {
+                        leftLabels[i].currentY = leftLabels[i - 1].currentY + minSpacing;
+                    }
+                }
+                if (leftLabels[leftLabels.length - 1].currentY > height - verticalMargin) {
+                    leftLabels[leftLabels.length - 1].currentY = height - verticalMargin;
+                    for (let i = leftLabels.length - 2; i >= 0; i--) {
+                        if (leftLabels[i].currentY > leftLabels[i + 1].currentY - minSpacing) {
+                            leftLabels[i].currentY = leftLabels[i + 1].currentY - minSpacing;
+                        }
+                    }
+                }
+            }
+
+            // Draw Pointer Lines and Text
+            const allLabels = [...rightLabels, ...leftLabels];
+            allLabels.forEach(lbl => {
+                const side = lbl.side;
+                
+                // Draw Pointer Line
+                ctx.save();
+                ctx.strokeStyle = 'rgba(184, 156, 160, 0.45)'; // var(--muted) with opacity
+                ctx.lineWidth = 1;
+                
+                ctx.beginPath();
+                ctx.moveTo(lbl.x1, lbl.y1);
+                
+                const kneeX = lbl.x2;
+                const kneeY = lbl.currentY;
+                ctx.lineTo(kneeX, kneeY);
+
+                // Tighter text offset (6px instead of 8px)
+                const textX = kneeX + (side === 'right' ? 6 : -6);
+                ctx.lineTo(textX, kneeY);
+                ctx.stroke();
+
+                // Draw bullet dot on the slice edge
+                ctx.beginPath();
+                ctx.arc(lbl.x1, lbl.y1, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = lbl.color;
+                ctx.fill();
+
+                ctx.restore();
+
+                // Draw Text Labels
+                ctx.save();
+                const fontX = textX + (side === 'right' ? 4 : -4);
+                ctx.textAlign = side === 'right' ? 'left' : 'right';
+                
+                // Line 1: Emoji + Category Name (Roboto Condensed)
+                ctx.textBaseline = 'bottom';
+                ctx.font = 'bold 11px "Roboto Condensed", sans-serif';
+                ctx.fillStyle = '#f5eff1'; 
+                
+                const shortName = shortenCatName(lbl.slice.name);
+                const emoji = categoryEmojis[lbl.slice.name] || categoryEmojis[shortName] || '🏷️';
+                const labelText = side === 'right' ? `${emoji} ${shortName}` : `${shortName} ${emoji}`;
+                ctx.fillText(labelText, fontX, kneeY - 1);
+
+                // Line 2: Amount in DH (muted color, Roboto Condensed)
+                ctx.textBaseline = 'top';
+                ctx.font = '500 10px "Roboto Condensed", sans-serif';
+                ctx.fillStyle = '#b89ca0'; 
+                ctx.fillText(fmtDH(lbl.slice.value), fontX, kneeY + 1);
+
+                ctx.restore();
             });
         }
 
@@ -1584,6 +1844,11 @@
         }
 
         window.addEventListener('online', processQueue);
+        window.addEventListener('resize', () => {
+            if (lastCategoryTx && lastCategoryTx.length) {
+                updateCategoryChart(lastCategoryTx);
+            }
+        });
 
         // ═══════════════════════════════════════════════
         // TOAST
