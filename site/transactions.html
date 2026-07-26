@@ -14,11 +14,11 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ff0000",
-                        "background-dark": "#1a0000",
-                        "surface": "#2d0000",
-                        "surface2": "#4d0000",
-                        "border-match": "#660000"
+                        "primary": "#8B2E3B",
+                        "background-dark": "#f5f5f5",
+                        "surface": "#ffffff",
+                        "surface2": "#f0f0f0",
+                        "border-match": "rgba(139,46,59,.2)"
                     }
                 }
             }
@@ -26,14 +26,14 @@
     </script>
     <style>
         :root {
-            --bg: #1a0000;
-            --surface: #2d0000;
-            --surface2: #4d0000;
-            --accent: #ff0000;
-            --accent2: #8b0000;
-            --text: #00ff41;
-            --muted: #008f11;
-            --border: #660000;
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface2: #f0f0f0;
+            --accent: #8B2E3B;
+            --accent2: #A03D52;
+            --text: #333333;
+            --muted: #666666;
+            --border: rgba(139,46,59,.2);
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -65,10 +65,10 @@
         #modal-box {
             width: 100%;
             max-width: 430px;
-            background: #2d0000;
+            background: #ffffff;
             border-radius: 24px 24px 0 0;
             padding: 24px 20px 40px;
-            border-top: 1px solid rgba(255,0,0,.35);
+            border-top: 1px solid rgba(139,46,59,.2);
             animation: slideUp .3s ease;
             max-height: 90vh;
             overflow-y: auto;
@@ -79,10 +79,10 @@
         #modal-box select,
         #modal-box textarea {
             width: 100%;
-            background: rgba(255,0,0,.06);
-            border: 1px solid rgba(255,0,0,.2);
+            background: rgba(139,46,59,.06);
+            border: 1px solid rgba(139,46,59,.2);
             border-radius: 12px;
-            color: #00ff41;
+            color: #333333;
             padding: 12px 15px;
             font-size: 16px;
             font-family: 'Inter', sans-serif;
@@ -92,26 +92,29 @@
         }
         #modal-box input:focus,
         #modal-box select:focus,
-        #modal-box textarea:focus { border-color: #ff0000; }
-        #modal-box select option { background: #2d0000; color: #00ff41; }
+        #modal-box textarea:focus { border-color: #8B2E3B; }
+        #modal-box select option { background: #ffffff; color: #333333; }
 
         /* ── FAB ───────────────────────────── */
         .fab-bordeaux {
-            background-color: #8b0000 !important;
-            color: #00ff41 !important;
-            box-shadow: 0 8px 20px rgba(139,0,0,0.5);
-            animation: glow-rouge 2s infinite alternate;
-        }
-        @keyframes glow-rouge {
-            0%   { box-shadow: 0 8px 20px rgba(139,0,0,0.5), 0 0 5px rgba(255,0,0,0.2); }
-            100% { box-shadow: 0 8px 20px rgba(255,0,0,0.6), 0 0 25px rgba(255,0,0,0.9), 0 0 50px rgba(255,0,0,0.4); }
-        }
-        #submit-btn {
-            background-color: #8b0000 !important;
-            color: #00ff41 !important;
+            background: linear-gradient(135deg, #8B2E3B, #6C242E) !important;
+            color: #fff !important;
+            box-shadow: 0 0 15px rgba(255, 183, 0, 0.6), 0 0 25px rgba(255, 183, 0, 0.3);
             transition: all 0.2s;
         }
-        #submit-btn:active { transform: scale(0.98); background-color: #600000 !important; }
+        .fab-bordeaux:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.8), 0 0 35px rgba(255, 183, 0, 0.5);
+        }
+        #submit-btn {
+            background: linear-gradient(135deg, #8B2E3B, #A03D52) !important;
+            color: #fff !important;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(255, 183, 0, 0.6), 0 0 25px rgba(255, 183, 0, 0.3);
+        }
+        #submit-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.8), 0 0 35px rgba(255, 183, 0, 0.5);
+        }
+        #submit-btn:active { transform: scale(0.98); background: linear-gradient(135deg, #6C242E, #8B2E3B) !important; }
         /* Tailwind overrides */
         .text-slate-400 { color: var(--muted) !important; }
         .text-white { color: var(--text) !important; }
@@ -123,7 +126,7 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: #e63946;
+            background: linear-gradient(135deg, #8B2E3B, #FFB700);
             color: #fff;
             padding: 12px 24px;
             border-radius: 999px;
@@ -136,7 +139,7 @@
             pointer-events: none;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        #toast.error { background: #ef4444; }
+        #toast.error { background: linear-gradient(135deg, #8B2E3B, #ef4444); }
     </style>
 </head>
 
@@ -150,7 +153,7 @@
                 <div class="size-8 bg-gradient-to-br from-primary to-surface rounded-lg flex items-center justify-center overflow-hidden">
                     <img src="assets/piggy_bank_logo.png" alt="Logo" class="size-full object-cover" />
                 </div>
-                <h1 class="text-xl font-bold text-white">Historique</h1>
+                <h1 class="text-xl font-bold text-slate-800">Historique</h1>
             </div>
             <button onclick="forceSync()" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors" title="Forcer l'actualisation">
                 <span id="sync-status" class="text-primary/70">Synchro...</span>
@@ -442,7 +445,7 @@
                 if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
                 return inc || "Revenu";
             }
-            return t.sous_categorie || t.categorie || "Dépense";
+            return t.categorie || "Dépense";
         }
 
         // ═══════════════════════════════════════════════
@@ -613,7 +616,7 @@
                 const date = parseDt(t.date);
                 const dateStr = date ? date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : String(t.date || '');
                 const catLabel = getLabel(t);
-                const secondaryLabel = revenue ? 'Entrée' : (t.sous_categorie ? t.categorie : (t.lieu || t.description || 'Sortie'));
+                const secondaryLabel = revenue ? 'Entrée' : (t.sous_categorie || t.lieu || t.description || 'Sortie');
                 const safeId = String(t.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
                 return `
@@ -693,12 +696,12 @@
             document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
 
             populateCatSelect();
-            const parentCat = t.sous_categorie || t.categorie;
+            const parentCat = t.categorie;
             document.getElementById('f-categorie').value = parentCat;
             onCatChange();
 
             const subSel = document.getElementById('f-sous-cat');
-            const targetSub = t.categorie;
+            const targetSub = t.sous_categorie; // La sous-catégorie réelle
             if ([...subSel.options].some(o => o.value === targetSub)) {
                 subSel.value = targetSub;
                 document.getElementById('sub-cat-display').textContent = targetSub;
@@ -755,8 +758,8 @@
                 date: document.getElementById('f-date').value,
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
-                categorie: sousCat || parentCat,
-                sous_categorie: parentCat,
+                categorie: parentCat, 
+                sous_categorie: sousCat,
                 lieu: document.getElementById('f-lieu').value,
                 description: document.getElementById('f-desc').value
             };

@@ -17,8 +17,8 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#c9485b",
-                        "background-dark": "#07010a"
+                        "primary": "#8B2E3B",
+                        "background-dark": "#f5f5f5"
                     },
                     fontFamily: { "display": ["Inter"] }
                 }
@@ -38,20 +38,19 @@
         }
 
         :root {
-            --bd-deep:   #4A0404;
-            --bd-mid:    #722F37;
-            --bd-main:   #800020;
-            --rose:      #ff6b9d;
-            --violet:    #c77dff;
-            --orange:    #ff9500;
-            --gold:      #ffbe0b;
-            --magenta:   #ff006e;
-            --bg:        #07010a;
-            --surface:   rgba(74,4,4,.18);
-            --glass-b:   rgba(114,47,55,.3);
-            --text:      #f5eff1;
-            --muted:     #b89ca0;
-            /* kept for Chart.js compat */
+            --bd-deep:   #6C242E;
+            --bd-mid:    #8B2E3B;
+            --bd-main:   #8B2E3B;
+            --rose:      #A03D52;
+            --violet:    #FFB700;
+            --orange:    #FFC107;
+            --gold:      #FFB700;
+            --magenta:   #FFC107;
+            --bg:        #f5f5f5;
+            --surface:   #ffffff;
+            --glass-b:   rgba(139,46,59,.2);
+            --text:      #333333;
+            --muted:     #666666;
             --chart-green: #a1e633;
         }
 
@@ -64,11 +63,7 @@
             width: 100%;
             touch-action: pan-y;
             -webkit-text-size-adjust: 100%;
-            background:
-                radial-gradient(ellipse 80% 60% at 15% 10%, rgba(114,47,55,.18) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 85% 90%, rgba(74,4,4,.22) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(199,125,255,.04) 0%, transparent 70%),
-                #07010a;
+            background: var(--bg);
             color: var(--text);
         }
 
@@ -93,18 +88,18 @@
             letter-spacing: -1px;
             line-height: 1;
             background: linear-gradient(120deg,
-                #ff6b9d 0%,
-                #c77dff 22%,
-                #ff9500 44%,
-                #ff006e 66%,
-                #722F37 88%,
-                #ff6b9d 100%);
+                #8B2E3B 0%,
+                #A03D52 22%,
+                #FFB700 44%,
+                #FFC107 66%,
+                #8B2E3B 88%,
+                #A03D52 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter:
-                drop-shadow(0 0 8px rgba(199,125,255,.7))
-                drop-shadow(0 0 18px rgba(255,107,157,.5));
+                drop-shadow(0 0 8px rgba(139,46,59,.4))
+                drop-shadow(0 0 18px rgba(255,183,0,.3));
         }
         .kwicl-sub {
             font-size: 10px;
@@ -116,7 +111,7 @@
 
         /* ── HEADER ──────────────────────────────────── */
         header {
-            background: rgba(7,1,10,.88);
+            background: rgba(245,245,245,.88);
             border-bottom: 1px solid var(--glass-b);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -140,7 +135,7 @@
         #modal-box {
             width: 100%;
             max-width: 430px;
-            background: rgba(12,3,8,.97);
+            background: rgba(255,255,255,.97);
             border-radius: 24px 24px 0 0;
             padding: 24px 20px 40px;
             border-left: 1px solid var(--glass-b);
@@ -157,8 +152,8 @@
             top: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg,
-                #4A0404, #722F37, #ff6b9d, #c77dff,
-                #ff9500, #ffbe0b, #ff006e, #4A0404);
+                #8B2E3B, #A03D52, #FFB700, #FFC107,
+                #8B2E3B, #A03D52, #FFB700, #8B2E3B);
             background-size: 200% 100%;
             animation: shimmer-stripe 3s linear infinite;
             border-radius: 24px 24px 0 0;
@@ -195,7 +190,7 @@
             box-shadow: 0 0 0 3px rgba(199,125,255,.18);
         }
         #modal-box select option {
-            background: #120308;
+            background: #ffffff;
             color: var(--text);
         }
         /* Featured category options */
@@ -210,7 +205,7 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: linear-gradient(135deg, #722F37, #ff6b9d);
+            background: linear-gradient(135deg, #8B2E3B, #FFB700);
             color: #fff;
             padding: 12px 24px;
             border-radius: 999px;
@@ -224,14 +219,14 @@
             box-shadow: 0 8px 28px rgba(255,107,157,.4);
         }
         #toast.show  { opacity:1; transform: translateX(-50%) translateY(0); }
-        #toast.error { background: linear-gradient(135deg,#4A0404,#ef4444); }
+        #toast.error { background: linear-gradient(135deg,#8B2E3B,#ef4444); }
 
         /* ── SKELETON ────────────────────────────────── */
         .skeleton {
             background: linear-gradient(90deg,
-                rgba(114,47,55,.06) 25%,
-                rgba(255,107,157,.14) 50%,
-                rgba(114,47,55,.06) 75%);
+                rgba(139,46,59,.06) 25%,
+                rgba(255,183,0,.14) 50%,
+                rgba(139,46,59,.06) 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
             border-radius: 12px;
@@ -249,20 +244,24 @@
             color: var(--muted) !important;
         }
         .period-btn.active {
-            background: linear-gradient(135deg,#722F37,#800020) !important;
+            background: linear-gradient(135deg,#8B2E3B,#6C242E) !important;
             border-color: var(--rose) !important;
             color: #fff !important;
             font-weight: 700 !important;
-            box-shadow: 0 4px 18px rgba(114,47,55,.55);
+            box-shadow: 0 4px 18px rgba(139,46,59,.3);
         }
 
         /* ── FAB — animated rainbow ring ────────────── */
         .fab-rainbow {
             position: relative;
             overflow: visible !important;
-            background: linear-gradient(135deg,#800020,#4A0404) !important;
-            box-shadow: 0 8px 28px rgba(128,0,32,.6);
+            background: linear-gradient(135deg,#8B2E3B,#6C242E) !important;
+            box-shadow: 0 0 15px rgba(255, 183, 0, 0.6), 0 0 25px rgba(255, 183, 0, 0.3);
             z-index: 20;
+            transition: all 0.2s;
+        }
+        .fab-rainbow:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.8), 0 0 35px rgba(255, 183, 0, 0.5);
         }
         .fab-rainbow::before {
             content: '';
@@ -271,8 +270,8 @@
             border-radius: 50%;
             background: conic-gradient(
                 from var(--border-angle),
-                #4A0404, #722F37, #ff6b9d, #c77dff,
-                #ff9500, #ffbe0b, #ff006e, #4A0404
+                #6C242E, #8B2E3B, #FFB700, #FFC107,
+                #FFB700, #8B2E3B, #6C242E
             );
             animation: border-spin 3s linear infinite, border-pulse 2s ease-in-out infinite;
             z-index: -1;
@@ -282,19 +281,22 @@
             position: absolute;
             inset: 3px;
             border-radius: 50%;
-            background: linear-gradient(135deg,#800020,#4A0404);
+            background: linear-gradient(135deg,#8B2E3B,#6C242E);
             z-index: -1;
         }
 
         /* ── SUBMIT BUTTON — animated rainbow border ─ */
         #submit-btn {
-            background: linear-gradient(135deg,#800020,#722F37) !important;
+            background: linear-gradient(135deg,#8B2E3B,#A03D52) !important;
             color: #fff !important;
             position: relative;
             overflow: visible;
             border: none;
-            transition: transform .2s;
-            box-shadow: 0 8px 24px rgba(128,0,32,.55);
+            transition: all .2s;
+            box-shadow: 0 0 15px rgba(255, 183, 0, 0.6), 0 0 25px rgba(255, 183, 0, 0.3);
+        }
+        #submit-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.8), 0 0 35px rgba(255, 183, 0, 0.5);
         }
         #submit-btn::before {
             content: '';
@@ -303,8 +305,8 @@
             border-radius: inherit;
             background: conic-gradient(
                 from var(--border-angle),
-                #722F37, #ff6b9d, #c77dff,
-                #ff9500, #ff006e, #722F37
+                #8B2E3B, #FFB700, #FFC107,
+                #FFB700, #A03D52, #8B2E3B
             );
             animation: border-spin 4s linear infinite;
             z-index: -1;
@@ -314,10 +316,18 @@
             position: absolute;
             inset: 2px;
             border-radius: inherit;
-            background: linear-gradient(135deg,#800020,#722F37);
+            background: linear-gradient(135deg,#8B2E3B,#A03D52);
             z-index: -1;
         }
         #submit-btn:active { transform: scale(.98); }
+
+        .glow-effect {
+            box-shadow: 0 0 15px rgba(255, 183, 0, 0.6), 0 0 25px rgba(255, 183, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+        .glow-effect:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.8), 0 0 35px rgba(255, 183, 0, 0.5);
+        }
 
         /* ── CAT MANAGER MODAL ───────────────────────── */
         #cat-manager-box::before {
@@ -326,7 +336,7 @@
             top: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg,
-                #c77dff, #ff6b9d, #ff9500, #4A0404, #c77dff);
+                #8B2E3B, #A03D52, #FFB700, #8B2E3B, #A03D52);
             background-size: 200% 100%;
             animation: shimmer-stripe 4s linear infinite;
             border-radius: 24px 24px 0 0;
@@ -449,12 +459,36 @@
             </div>
         </section>
 
-        <!-- CATEGORY CHART (ROSE / NIGHTINGALE) -->
+        <!-- EXPENSE SUMMARY -->
+        <section class="px-4 pb-4">
+            <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-2">Résumé des Dépenses</p>
+                <div class="flex justify-between items-end mb-3">
+                    <h2 id="summary-total-spent" class="text-3xl font-bold text-primary">0 DH</h2>
+                    <p class="text-xs text-slate-500 font-medium">Période sélectionnée</p>
+                </div>
+                <div id="summary-top-cats" class="flex flex-col gap-1.5 mt-4">
+                    <!-- Top categories injected here via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- CATEGORY BAR CHART (HISTOGRAM) -->
         <section class="px-4 pb-6">
             <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
                 <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par catégorie</p>
-                <div style="position:relative; min-height:360px;">
+                <div style="position:relative; height:280px;">
                     <canvas id="category-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAILY EXPENSES LINE CHART -->
+        <section class="px-4 pb-6">
+            <div class="bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                <p class="text-primary/60 text-[10px] font-semibold uppercase tracking-widest mb-3">Dépenses par Jour</p>
+                <div style="position:relative; height:220px;">
+                    <canvas id="daily-chart"></canvas>
                 </div>
             </div>
         </section>
@@ -851,8 +885,8 @@
                 if (!isNaN(inc) && !isNaN(parseFloat(inc))) return "Revenu";
                 return inc || "Revenu";
             }
-            // Prioritize Sub-Category as Category label
-            return t.sous_categorie || t.categorie || "Dépense";
+            // Prioritize Category as the main label
+            return t.categorie || "Dépense";
         }
 
         function getFiltered() {
@@ -955,360 +989,190 @@
             });
         }
 
+        let dailyChart = null;
+
         function updateCategoryChart(tx) {
             lastCategoryTx = tx;
             const canvas = document.getElementById('category-chart');
             if (!canvas) return;
 
-            // Destroy Chart.js instance if it exists to avoid conflicts
-            if (barChart && typeof barChart.destroy === 'function') {
+            if (barChart) {
                 barChart.destroy();
                 barChart = null;
-            }
-
-            const ctx = canvas.getContext('2d');
-            if (!tx || !tx.length) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                return;
             }
 
             // Filter expenses
             const expenses = tx.filter(t => !isRev(t));
             const catTotals = {};
+            let totalSpent = 0;
             expenses.forEach(t => {
                 const cat = t.categorie || 'Autre';
-                catTotals[cat] = (catTotals[cat] || 0) + getVal(t);
+                const val = getVal(t);
+                catTotals[cat] = (catTotals[cat] || 0) + val;
+                totalSpent += val;
             });
 
-            // Keep top 7 categories by amount
+            // Update Summary Section
+            document.getElementById('summary-total-spent').textContent = fmtDH(totalSpent);
+            
+            // Keep top categories by amount and sort descending
             const sortedCats = Object.entries(catTotals)
                 .filter(c => c[1] > 0)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 7);
+                .sort((a, b) => b[1] - a[1]);
+
+            // Top 3-4 for the summary
+            const topCats = sortedCats.slice(0, 4);
+            const summaryHTML = topCats.map(c => {
+                const pct = totalSpent > 0 ? ((c[1] / totalSpent) * 100).toFixed(1) : 0;
+                return `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-slate-600">${c[0]}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-800">${fmtDH(c[1])}</span>
+                        <span class="text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded">${pct}%</span>
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('summary-top-cats').innerHTML = summaryHTML || '<p class="text-xs text-slate-400">Aucune donnée</p>';
 
             if (sortedCats.length === 0) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 return;
             }
 
-            // Calculate total of top 7 categories for local proportions
-            const totalExpenses = sortedCats.reduce((sum, c) => sum + c[1], 0);
+            const labels = sortedCats.map(c => c[0].length > 12 ? c[0].slice(0,11) + '…' : c[0]);
+            const data = sortedCats.map(c => c[1]);
+            const backgroundColors = sortedCats.map((_, i) => {
+                const colors = ['#8B2E3B', '#A03D52', '#B44E66', '#FFB700', '#FFC107', '#FFD54F'];
+                return colors[i % colors.length];
+            });
 
-            // Handle DPI Scaling for Razor-sharp rendering
-            const rect = canvas.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height || 360; 
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-            ctx.scale(dpr, dpr);
-
-            ctx.clearRect(0, 0, width, height);
-
-            // Layout Parameters
-            const cx = width / 2;
-            const cy = height / 2;
-            const minDimension = Math.min(width, height);
-            const maxRadius = minDimension * 0.34; 
-            const innerRadius = maxRadius * 0.33;  
-
-            // Vibrant palette adapted to application dark/neon theme
-            const colors = [
-                '#c77dff', // Rose/Purple (var(--primary))
-                '#ff6b9d', // Rose/Pink (var(--rose))
-                '#ff9500', // Orange (var(--orange))
-                '#a1e633', // Green (var(--green))
-                '#00b4d8', // Blue (var(--blue))
-                '#ef4444', // Red (var(--red))
-                '#ffbe0b'  // Yellow/Amber
-            ];
-
-            const categoryEmojis = {
-                'Alimentation': '🛒',
-                'Café': '☕',
-                'Transport': '🚗',
-                'Déplacement': '💼',
-                'Santé': '💊',
-                'Voyages': '✈️',
-                'Bien-être': '🧘',
-                'Maison et frais de service': '🏠',
-                'Maison & Serv.': '🏠',
-                'Électroménagers': '🔌',
-                'Éducation enfant': '🎓',
-                'Éduc. Enfants': '🎓',
-                'vetements enfants': '👕',
-                'Vêt. Enfants': '👕',
-                'Appartement': '🏢',
-                'appartement KENITRA': '🏢',
-                'appartement CASA': '🏢',
-                'villa tamesna': '🏡',
-                'investissement LOT SAHEL icl': '🪙',
-                'INVESTISSEMENT': '📈',
-                'Loisirs': '🎮',
-                'Salaire': '💵',
-                'Autres revenus': '💳',
-                'Autre': '💬'
+            const drawValuesPlugin = {
+                id: 'drawCategoryValues',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const val = dataset.data[index];
+                                if (val === 0) return;
+                                const text = (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : Math.round(val));
+                                ctx.font = 'bold 10px Inter';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillStyle = '#666666';
+                                ctx.fillText(text, element.x, element.y - 4);
+                            });
+                        }
+                    });
+                }
             };
 
-            function shortenCatName(name) {
-                if (name === 'Maison et frais de service') return 'Maison & Serv.';
-                if (name === 'investissement LOT SAHEL icl') return 'Lot Sahel';
-                if (name === 'appartement KENITRA') return 'Appart Kenitra';
-                if (name === 'appartement CASA') return 'Appart Casa';
-                if (name === 'villa tamesna') return 'Villa Tamesna';
-                if (name === 'vetements enfants') return 'Vêt. Enfants';
-                if (name === 'Éducation enfant') return 'Éduc. Enfants';
-                if (name.length > 12) return name.slice(0, 11) + '…';
-                return name;
-            }
-
-            // Slices Calculations
-            const maxValue = sortedCats[0][1];
-            let currentAngle = -Math.PI / 2; // Start at 12 o'clock
-
-            const slices = sortedCats.map((cat, i) => {
-                const name = cat[0];
-                const value = cat[1];
-                const percentage = totalExpenses > 0 ? (value / totalExpenses) * 100 : 0;
-                
-                const angleDelta = (percentage / 100) * Math.PI * 2;
-                const startAngle = currentAngle;
-                const endAngle = currentAngle + angleDelta;
-                currentAngle = endAngle;
-
-                // Radius proportional to value relative to maximum value
-                // Clamp radius so even the smallest slice is visible (min 40% of maxRadius)
-                const relativeRadius = innerRadius + (maxRadius - innerRadius) * (0.35 + 0.65 * (value / maxValue));
-
-                return {
-                    name,
-                    value,
-                    percentage,
-                    startAngle,
-                    endAngle,
-                    radius: relativeRadius,
-                    color: colors[i % colors.length]
-                };
-            });
-
-            // 1. Draw Slices with Cream/Background borders for Exploded spacing
-            const gapAngle = 0.035; 
-            const sliceBorderColor = '#07010a'; // Dashboard dark background
-
-            slices.forEach(slice => {
-                if (slice.percentage <= 0) return;
-
-                const actualStart = slice.startAngle + gapAngle;
-                const actualEnd = slice.endAngle - gapAngle;
-                
-                if (actualEnd > actualStart) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, slice.radius, actualStart, actualEnd);
-                    ctx.arc(cx, cy, innerRadius, actualEnd, actualStart, true);
-                    ctx.closePath();
-
-                    ctx.fillStyle = slice.color;
-                    ctx.fill();
-
-                    ctx.strokeStyle = sliceBorderColor;
-                    ctx.lineWidth = 2.5;
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            });
-
-            // 2. Draw Center Circle (Globe/Grid Aesthetic)
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
-            ctx.fillStyle = '#120317'; // Surface color
-            ctx.fill();
-            ctx.strokeStyle = '#c77dff'; // Primary purple border
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Vector Globe Grid inside Center Circle
-            ctx.strokeStyle = 'rgba(199, 125, 255, 0.45)'; 
-            ctx.lineWidth = 1;
-            const gr = innerRadius * 0.6; // radius of globe grid
-            
-            // Outer globe circle
-            ctx.beginPath();
-            ctx.arc(cx, cy, gr, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Equator (horizontal line)
-            ctx.beginPath();
-            ctx.moveTo(cx - gr, cy);
-            ctx.lineTo(cx + gr, cy);
-            ctx.stroke();
-
-            // Meridian (vertical line)
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - gr);
-            ctx.lineTo(cx, cy + gr);
-            ctx.stroke();
-
-            // Latitude lines (ellipses)
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, gr * 0.5, gr, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-
-            // 3. Draw Percentages Inside Slices (White bold, Roboto Condensed)
-            slices.forEach(slice => {
-                if (slice.percentage < 4) return; // Hide for small slices
-
-                const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
-                const textDist = innerRadius + (slice.radius - innerRadius) * 0.55;
-                const px = cx + textDist * Math.cos(midAngle);
-                const py = cy + textDist * Math.sin(midAngle);
-
-                ctx.save();
-                ctx.fillStyle = '#07010a'; // Dark contrast on bright slice
-                const fontSize = Math.max(10, Math.min(14, Math.floor(slice.radius * 0.17)));
-                ctx.font = `bold ${fontSize}px "Roboto Condensed", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round(slice.percentage) + '%', px, py);
-                ctx.restore();
-            });
-
-            // 4. Draw Labels and Pointer Lines Outside with Collision Resolution
-            const leftLabels = [];
-            const rightLabels = [];
-
-            slices.forEach((slice, i) => {
-                const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
-                const cosAngle = Math.cos(midAngle);
-                const sinAngle = Math.sin(midAngle);
-
-                const x1 = cx + slice.radius * cosAngle;
-                const y1 = cy + slice.radius * sinAngle;
-
-                // Tighter knee distance (10px instead of 18px) to make the graph itself larger
-                const kneeDist = slice.radius + 10;
-                const x2 = cx + kneeDist * cosAngle;
-                const y2 = cy + kneeDist * sinAngle;
-
-                const labelObj = {
-                    index: i,
-                    slice,
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    targetY: y2,
-                    currentY: y2,
-                    side: cosAngle > 0 ? 'right' : 'left',
-                    color: slice.color,
-                    midAngle
-                };
-
-                if (cosAngle > 0) {
-                    rightLabels.push(labelObj);
-                } else {
-                    leftLabels.push(labelObj);
-                }
-            });
-
-            // Sort labels vertically
-            rightLabels.sort((a, b) => a.targetY - b.targetY);
-            leftLabels.sort((a, b) => a.targetY - b.targetY);
-
-            // Collision Resolution parameters
-            const minSpacing = 24; 
-            const verticalMargin = 22; 
-
-            // Resolve Right Labels collisions
-            if (rightLabels.length > 0) {
-                for (let i = 1; i < rightLabels.length; i++) {
-                    if (rightLabels[i].currentY < rightLabels[i - 1].currentY + minSpacing) {
-                        rightLabels[i].currentY = rightLabels[i - 1].currentY + minSpacing;
-                    }
-                }
-                if (rightLabels[rightLabels.length - 1].currentY > height - verticalMargin) {
-                    rightLabels[rightLabels.length - 1].currentY = height - verticalMargin;
-                    for (let i = rightLabels.length - 2; i >= 0; i--) {
-                        if (rightLabels[i].currentY > rightLabels[i + 1].currentY - minSpacing) {
-                            rightLabels[i].currentY = rightLabels[i + 1].currentY - minSpacing;
+            barChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Dépenses',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: c => {
+                                    const pct = ((c.parsed.y / totalSpent) * 100).toFixed(1);
+                                    return `${fmtDH(c.parsed.y)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#666666', font: { size: 10 } }
+                        },
+                        y: {
+                            display: false,
+                            grid: { color: 'rgba(139, 46, 59, 0.05)' },
+                            beginAtZero: true
                         }
                     }
-                }
-            }
+                },
+                plugins: [drawValuesPlugin]
+            });
+        }
 
-            // Resolve Left Labels collisions
-            if (leftLabels.length > 0) {
-                for (let i = 1; i < leftLabels.length; i++) {
-                    if (leftLabels[i].currentY < leftLabels[i - 1].currentY + minSpacing) {
-                        leftLabels[i].currentY = leftLabels[i - 1].currentY + minSpacing;
-                    }
-                }
-                if (leftLabels[leftLabels.length - 1].currentY > height - verticalMargin) {
-                    leftLabels[leftLabels.length - 1].currentY = height - verticalMargin;
-                    for (let i = leftLabels.length - 2; i >= 0; i--) {
-                        if (leftLabels[i].currentY > leftLabels[i + 1].currentY - minSpacing) {
-                            leftLabels[i].currentY = leftLabels[i + 1].currentY - minSpacing;
+        function updateDailyChart(tx) {
+            const canvas = document.getElementById('daily-chart');
+            if (!canvas) return;
+            if (dailyChart) { dailyChart.destroy(); dailyChart = null; }
+
+            const expenses = tx.filter(t => !isRev(t));
+            if (!expenses.length) return;
+
+            const byDate = {};
+            expenses.forEach(t => {
+                const d = parseDt(t.date); if (!d) return;
+                const k = d.toISOString().slice(0, 10);
+                if (!byDate[k]) byDate[k] = 0;
+                byDate[k] += getVal(t);
+            });
+
+            const keys = Object.keys(byDate).sort();
+            const labels = keys.map(k => new Date(k).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }));
+            const data = keys.map(k => byDate[k]);
+
+            const gradient = canvas.getContext('2d').createLinearGradient(0, 0, 0, 250);
+            gradient.addColorStop(0, 'rgba(139, 46, 59, 0.25)'); // Garnet 25%
+            gradient.addColorStop(1, 'rgba(139, 46, 59, 0.0)');
+
+            dailyChart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Dépenses',
+                        data: data,
+                        borderColor: '#8B2E3B', // Garnet
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#FFB700', // Yellow points
+                        pointBorderColor: '#8B2E3B',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: c => ` ${fmtDH(c.parsed.y)}`
+                            }
                         }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#666', font: { size: 9 }, maxRotation: 45 }, grid: { display: false } },
+                        y: { ticks: { color: '#666', font: { size: 9 }, callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v }, grid: { color: 'rgba(139, 46, 59, 0.05)' }, beginAtZero: true }
                     }
                 }
-            }
-
-            // Draw Pointer Lines and Text
-            const allLabels = [...rightLabels, ...leftLabels];
-            allLabels.forEach(lbl => {
-                const side = lbl.side;
-                
-                // Draw Pointer Line
-                ctx.save();
-                ctx.strokeStyle = 'rgba(184, 156, 160, 0.45)'; // var(--muted) with opacity
-                ctx.lineWidth = 1;
-                
-                ctx.beginPath();
-                ctx.moveTo(lbl.x1, lbl.y1);
-                
-                const kneeX = lbl.x2;
-                const kneeY = lbl.currentY;
-                ctx.lineTo(kneeX, kneeY);
-
-                // Tighter text offset (6px instead of 8px)
-                const textX = kneeX + (side === 'right' ? 6 : -6);
-                ctx.lineTo(textX, kneeY);
-                ctx.stroke();
-
-                // Draw bullet dot on the slice edge
-                ctx.beginPath();
-                ctx.arc(lbl.x1, lbl.y1, 2.5, 0, Math.PI * 2);
-                ctx.fillStyle = lbl.color;
-                ctx.fill();
-
-                ctx.restore();
-
-                // Draw Text Labels
-                ctx.save();
-                const fontX = textX + (side === 'right' ? 4 : -4);
-                ctx.textAlign = side === 'right' ? 'left' : 'right';
-                
-                // Line 1: Emoji + Category Name (Roboto Condensed)
-                ctx.textBaseline = 'bottom';
-                ctx.font = 'bold 11px "Roboto Condensed", sans-serif';
-                ctx.fillStyle = '#f5eff1'; 
-                
-                const shortName = shortenCatName(lbl.slice.name);
-                const emoji = categoryEmojis[lbl.slice.name] || categoryEmojis[shortName] || '🏷️';
-                const labelText = side === 'right' ? `${emoji} ${shortName}` : `${shortName} ${emoji}`;
-                ctx.fillText(labelText, fontX, kneeY - 1);
-
-                // Line 2: Amount in DH (muted color, Roboto Condensed)
-                ctx.textBaseline = 'top';
-                ctx.font = '500 10px "Roboto Condensed", sans-serif';
-                ctx.fillStyle = '#b89ca0'; 
-                ctx.fillText(fmtDH(lbl.slice.value), fontX, kneeY + 1);
-
-                ctx.restore();
             });
         }
 
@@ -1507,6 +1371,7 @@
             updateStats(tx);
             updateChart(tx);
             updateCategoryChart(tx);
+            updateDailyChart(tx);
             updateYearlyMonthlyChart();
             updateTxList(tx);
         }
@@ -1698,12 +1563,12 @@
             
             // On pre-remplit la catégorie parente
             populateCatSelect();
-            const parentCat = t.sous_categorie || t.categorie; 
+            const parentCat = t.categorie; 
             document.getElementById('f-categorie').value = parentCat;
             
             onCatChange();
             const subSel = document.getElementById('f-sous-cat');
-            const targetSub = t.categorie; // Dans notre logique, la catégorie affichée est la sous-cat réelle
+            const targetSub = t.sous_categorie; // La sous-catégorie réelle
             
             if ([...subSel.options].some(o => o.value === targetSub)) {
                 subSel.value = targetSub;
@@ -1760,8 +1625,8 @@
                 date: document.getElementById('f-date').value,
                 montant: isRevenu ? '' : montantVal,
                 income: isRevenu ? montantVal : '',
-                categorie: sousCat || parentCat, 
-                sous_categorie: parentCat,
+                categorie: parentCat, 
+                sous_categorie: sousCat,
                 lieu: document.getElementById('f-lieu').value,
                 description: document.getElementById('f-desc').value
             };
@@ -1844,11 +1709,6 @@
         }
 
         window.addEventListener('online', processQueue);
-        window.addEventListener('resize', () => {
-            if (lastCategoryTx && lastCategoryTx.length) {
-                updateCategoryChart(lastCategoryTx);
-            }
-        });
 
         // ═══════════════════════════════════════════════
         // TOAST
