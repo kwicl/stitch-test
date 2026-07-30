@@ -14,6 +14,10 @@ function doGet(e) {
   var action = e.parameter.action;
   var sheet = getTargetSheet();
   
+  if (action === 'deduplicate') {
+    return jsonResponse({ success: true, result: removeDuplicatesInSheet(sheet) });
+  }
+  
   if (action === 'getAll') {
     return getAllTransactions(sheet);
   }
@@ -70,6 +74,20 @@ function addTransaction(sheet, data) {
   var income = data.income !== '' && data.income != null ? data.income : '';
   var sousCat = data.sous_categorie || data.paiement || '';
   var dateVal = parseInputDate(data.date);
+  
+  // Anti-duplication basée sur les données : on évite d'ajouter la même transaction
+  var allRows = sheet.getDataRange().getValues();
+  var reqDateTime = dateVal.getTime();
+  for (var j = 1; j < allRows.length; j++) {
+    var r = allRows[j];
+    var rDate = r[1] instanceof Date ? r[1].getTime() : new Date(r[1]).getTime();
+    if (rDate === reqDateTime && 
+        String(r[2]) === String(montant) && 
+        String(r[3]) === String(income) && 
+        String(r[4]) === String(data.categorie || '')) {
+      return jsonResponse({ success: true, action: 'skip_duplicate', id: r[0], message: 'Transaction ignorée car identique existante.' });
+    }
+  }
   
   var row = [
     id,
@@ -144,6 +162,9 @@ function deleteTransaction(sheet, data) {
 }
 
 function getAllTransactions(sheet) {
+  // Auto-nettoyage des doublons au moment de lire
+  removeDuplicatesInSheet(sheet);
+
   var range = sheet.getDataRange();
   var values = range.getValues();
   var displayValues = range.getDisplayValues(); // ✅ Pour lire les dates telles qu'affichées
@@ -173,8 +194,14 @@ function getAllTransactions(sheet) {
       description: row[6]
     };
   })
-  .filter(function(t) { return t.date || t.montant || t.income; })
-  .reverse();
+  .filter(function(t) { return t.date || t.montant || t.income; });
+  
+  // Tri chronologique décroissant fort (du plus récent au plus ancien)
+  result.sort(function(a, b) {
+    var da = parseInputDate(a.date).getTime();
+    var db = parseInputDate(b.date).getTime();
+    return db - da; // Décroissant
+  });
   
   return jsonResponse({ success: true, data: result });
 }
@@ -183,6 +210,37 @@ function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function removeDuplicatesInSheet(sheet) {
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+  if (values.length <= 1) return { duplicatesRemoved: 0 };
+  
+  var uniqueRows = [];
+  var seen = {};
+  var headers = values[0];
+  uniqueRows.push(headers);
+  var duplicatesCount = 0;
+  
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var dateStr = row[1] instanceof Date ? row[1].getTime() : row[1];
+    var key = dateStr + "|" + row[2] + "|" + row[3] + "|" + row[4]; // Date + Montant + Type + Categorie
+    
+    if (seen[key]) {
+      duplicatesCount++;
+    } else {
+      seen[key] = true;
+      uniqueRows.push(row);
+    }
+  }
+  
+  if (duplicatesCount > 0) {
+    sheet.clearContents();
+    sheet.getRange(1, 1, uniqueRows.length, uniqueRows[0].length).setValues(uniqueRows);
+  }
+  return { duplicatesRemoved: duplicatesCount };
 }
 
 // ============================================================
