@@ -1,4 +1,5 @@
 {
+    "name": "smart-expenses-dashboard",
     "version": 2,
     "outputDirectory": "site",
     "routes": [
