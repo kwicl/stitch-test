@@ -916,9 +916,8 @@
             }
             if (period === 'semaine') {
                 start = new Date(now); start.setHours(0, 0, 0, 0);
-                // Trouver le lundi de la semaine
                 const day = start.getDay() || 7;
-                if (day !== 1) start.setHours(-24 * (day - 1));
+                if (day !== 1) start.setDate(start.getDate() - (day - 1));
             }
             if (period === 'mois') {
                 start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -926,9 +925,13 @@
             if (period === 'annee') {
                 start = new Date(now.getFullYear(), 0, 1);
             }
+            
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+
             return allTx.filter(t => {
                 const d = parseDt(t.date);
-                return d && d >= start && d <= now;
+                return d && d >= start && d <= end;
             });
         }
 
@@ -964,7 +967,7 @@
             const byDate = {};
             tx.forEach(t => {
                 const d = parseDt(t.date); if (!d) return;
-                const k = d.toISOString().slice(0, 10);
+                const k = fDateLocal(d);
                 if (!byDate[k]) byDate[k] = { rev: 0, dep: 0 };
                 const a = getVal(t);
                 if (isRev(t)) byDate[k].rev += a;
@@ -1141,7 +1144,7 @@
             const byDate = {};
             expenses.forEach(t => {
                 const d = parseDt(t.date); if (!d) return;
-                const k = d.toISOString().slice(0, 10);
+                const k = fDateLocal(d);
                 if (!byDate[k]) byDate[k] = 0;
                 byDate[k] += getVal(t);
             });
@@ -1303,7 +1306,7 @@
                     },
                     scales: {
                         x: {
-                            ticks: { color: '#f8fafc', font: { size: 9 } },
+                            ticks: { color: '#64748b', font: { size: 9 } },
                             grid: { display: false },
                             border: { display: false }
                         },
