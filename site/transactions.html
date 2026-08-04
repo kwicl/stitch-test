@@ -481,7 +481,24 @@
                         return (b.index || 0) - (a.index || 0);
                     });
                     
-                    allTx = merged;
+                    // Nettoyage des doublons côté client au cas où le script distant renvoie des doublons
+                    const unique = [];
+                    const seenKeys = new Set();
+                    const seenIds = new Set();
+                    for (const t of merged) {
+                        if (t.id && seenIds.has(String(t.id))) continue;
+                        if (t.id) seenIds.add(String(t.id));
+                        
+                        const dt = parseDt(t.date);
+                        const dStr = dt ? dt.getTime() : String(t.date);
+                        const key = dStr + '|' + getVal(t) + '|' + isRev(t) + '|' + String(t.categorie || '');
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            unique.push(t);
+                        }
+                    }
+                    
+                    allTx = unique;
                     document.getElementById('sync-status').textContent = `Synchro : ${new Date().toLocaleTimeString('fr-FR')}`;
                     renderTransactions();
                 }
@@ -752,6 +769,24 @@
             const montantVal = parseFloat(document.getElementById('f-montant').value) || 0;
             const sousCat = getSelectedSubCat();
             const parentCat = document.getElementById('f-categorie').value;
+            const txDate = document.getElementById('f-date').value;
+
+            // Blocage des doublons à l'insertion
+            if (!editingId) {
+                const reqDateDt = parseDt(txDate).getTime();
+                const existant = allTx.find(t => {
+                    const tDt = parseDt(t.date);
+                    if (!tDt) return false;
+                    return tDt.getTime() === reqDateDt &&
+                           (isRevenu ? (cleanAmount(t.income) === montantVal) : (cleanAmount(t.montant) === montantVal)) &&
+                           String(t.categorie || '') === parentCat;
+                });
+                if (existant) {
+                    showToast("⚠️ Doublon détecté ! Opération annulée.", true);
+                    btn.disabled = false;
+                    return;
+                }
+            }
 
             const newTx = {
                 id: editingId || 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),

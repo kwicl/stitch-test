@@ -1489,7 +1489,24 @@
                         return (b.index || 0) - (a.index || 0); 
                     });
                     
-                    allTx = merged;
+                    // Nettoyage des doublons côté client au cas où le script distant renvoie des doublons
+                    const unique = [];
+                    const seenKeys = new Set();
+                    const seenIds = new Set();
+                    for (const t of merged) {
+                        if (t.id && seenIds.has(String(t.id))) continue;
+                        if (t.id) seenIds.add(String(t.id));
+                        
+                        const dt = parseDt(t.date);
+                        const dStr = dt ? dt.getTime() : String(t.date);
+                        const key = dStr + '|' + getVal(t) + '|' + isRev(t) + '|' + String(t.categorie || '');
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            unique.push(t);
+                        }
+                    }
+                    
+                    allTx = unique;
                     document.getElementById('conn-dot').style.background = '#e63946';
                     document.getElementById('conn-text').textContent = `✅ ${allTx.length} transactions`;
                     buildDropdown();

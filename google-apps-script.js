@@ -58,7 +58,7 @@ function getTargetSheet() {
 }
 
 function addTransaction(sheet, data) {
-  var id = data.id && !String(data.id).startsWith('id_') ? String(data.id) : Utilities.getUuid();
+  var id = data.id ? String(data.id) : Utilities.getUuid();
   
   // Anti-duplication : si l'ID est déjà présent, on fait un update à la place
   if (data.id) {
