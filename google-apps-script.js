@@ -246,3 +246,42 @@ function removeDuplicatesInSheet(sheet) {
 // ============================================================
 // FIN DU SCRIPT
 // ============================================================
+
+
+function cleanCategories() {
+  var sheet = getTargetSheet();
+  var range = sheet.getDataRange();
+  var values = range.getValues();
+
+  var mapping = {
+    "Bien etre": "Bien-être",
+    "Villa Camelia ici": "Villa Camelia icl",
+    "Education enfant": "Éducation enfant",
+    "Electroménagers": "Électroménagers",
+    "Appartements kENITRA icl": "appartement KENITRA",
+    "Appartements KENITRA ici": "appartement KENITRA",
+    "Appartement Casa icl": "appartement CASA",
+    "Maison et frais de services": "Maison et frais de service",
+    "Déplacement de travail": "Déplacement"
+  };
+
+  var changes = 0;
+  var colEIndex = 4; // Index 4 = Colonne E
+
+  for (var i = 1; i < values.length; i++) {
+    var cat = values[i][colEIndex];
+    if (typeof cat === 'string') {
+      cat = cat.trim();
+      if (mapping[cat]) {
+        values[i][colEIndex] = mapping[cat];
+        changes++;
+      }
+    }
+  }
+
+  if (changes > 0) {
+    range.setValues(values);
+  }
+
+  Logger.log("Changements effectués sur la colonne E : " + changes);
+}
