@@ -25,6 +25,15 @@
         }
     </script>
     <style>
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px rgba(230, 57, 70, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(230, 57, 70, 0.8), 0 0 30px rgba(230, 57, 70, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(230, 57, 70, 0.4); }
+        }
+        .btn-glow {
+            animation: glowPulse 2s infinite ease-in-out;
+            border: 1px solid rgba(230, 57, 70, 0.3) !important;
+        }
         :root {
             --bg: #f5f5f5;
             --surface: #ffffff;
@@ -186,7 +195,7 @@
 
     <!-- FAB -->
     <button onclick="openModal()"
-        class="fixed bottom-24 right-5 size-16 rounded-full fab-bordeaux shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20">
+        class="btn-glow fixed bottom-24 right-5 size-16 rounded-full fab-bordeaux shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20">
         <span class="material-symbols-outlined text-4xl font-bold">add</span>
     </button>
 
@@ -222,7 +231,7 @@
             <form id="tx-form" onsubmit="submitTx(event)">
                 <input type="hidden" id="f-id" />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📅 Date</label>
-                <input type="date" id="f-date" required />
+                <input type="datetime-local" id="f-date" required />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">💰 Montant (DH)</label>
                 <input type="number" id="f-montant" placeholder="Ex: 150" step="0.01" min="0" required />
                 <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 block">📌 Type</label>
@@ -259,7 +268,7 @@
 
                 <div class="flex gap-2 mt-2">
                     <button type="submit" id="submit-btn"
-                        class="flex-1 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                        class="btn-glow flex-1 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                         <span id="submit-icon">✅</span>
                         <span id="submit-label">Enregistrer</span>
                     </button>
@@ -396,7 +405,18 @@
             if (!s) return null;
             if (s instanceof Date) return s;
             let str = String(s).trim();
-            if (str.includes('T')) str = str.split('T')[0];
+            
+            let timePart = null;
+            if (str.includes('T')) {
+                const parts = str.split('T');
+                str = parts[0];
+                timePart = parts[1];
+            } else if (str.includes(' ')) {
+                const parts = str.split(' ');
+                str = parts[0];
+                timePart = parts[1];
+            }
+
             const parts = str.split(/[/\- ]/);
             if (parts.length >= 3) {
                 let y, m, d;
@@ -407,7 +427,16 @@
                 } else {
                     d = parseInt(parts[0], 10); m = parseInt(parts[1], 10) - 1; y = parseInt(parts[2], 10);
                 }
-                const dt = new Date(y, m, d);
+                
+                let dt;
+                if (timePart) {
+                    const tParts = timePart.split(':');
+                    const h = parseInt(tParts[0], 10) || 0;
+                    const min = parseInt(tParts[1], 10) || 0;
+                    dt = new Date(y, m, d, h, min);
+                } else {
+                    dt = new Date(y, m, d);
+                }
                 if (!isNaN(dt.getTime())) return dt;
             }
             if (str.includes('Date(')) {
@@ -457,6 +486,16 @@
             const m = String(dt.getMonth() + 1).padStart(2, '0');
             const d = String(dt.getDate()).padStart(2, '0');
             return `${y}-${m}-${d}`;
+        }
+
+        function fDateTimeLocal(dt) {
+            if (!dt) return '';
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            const h = String(dt.getHours()).padStart(2, '0');
+            const min = String(dt.getMinutes()).padStart(2, '0');
+            return `${y}-${m}-${d}T${h}:${min}`;
         }
 
         async function loadHistory() {
@@ -661,7 +700,7 @@
             document.getElementById('modal-overlay').classList.add('open');
             document.getElementById('modal-title').textContent = '➕ Nouvelle transaction';
             document.getElementById('f-id').value = '';
-            document.getElementById('f-date').value = fDateLocal(new Date());
+            document.getElementById('f-date').value = fDateTimeLocal(new Date());
             document.getElementById('f-montant').value = '';
             document.getElementById('f-lieu').value = '';
             document.getElementById('f-desc').value = '';
@@ -707,7 +746,7 @@
             document.getElementById('f-id').value = id;
 
             const dt = parseDt(t.date);
-            if (dt) document.getElementById('f-date').value = fDateLocal(dt);
+            if (dt) document.getElementById('f-date').value = fDateTimeLocal(dt);
 
             document.getElementById('f-montant').value = getVal(t);
             document.getElementById('f-income').value = isRev(t) ? 'Revenu' : '';
