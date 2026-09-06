@@ -12,14 +12,30 @@
         rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#8B2E3B",
-                        "background-dark": "#f5f5f5",
-                        "surface": "#ffffff",
-                        "surface2": "#f0f0f0",
-                        "border-match": "rgba(139,46,59,.2)"
+                        "primary": "#163428",
+                        "primary-light": "#2d4b3e",
+                        "primary-dim": "#adcebd",
+                        "primary-pale": "#c8ead8",
+                        "secondary": "#9a452c",
+                        "secondary-cont": "#ff9476",
+                        "background-dark": "#fdf9f5",
+                        "surface": "#f7f3ef",
+                        "surface-high": "#ebe7e4",
+                        "border-match": "rgba(22, 52, 40, 0.10)"
+                    },
+                    fontFamily: {
+                        "sans": ["Manrope", "sans-serif"],
+                        "serif": ["'EB Garamond'", "serif"]
+                    },
+                    borderRadius: {
+                        "sm": "12px",
+                        "md": "18px",
+                        "lg": "26px",
+                        "full": "9999px"
                     }
                 }
             }
@@ -27,17 +43,109 @@
     </script>
     <style>
         :root {
-            --bg: #f5f5f5;
-            --surface: #ffffff;
-            --surface2: #f0f0f0;
-            --accent: #8B2E3B;
-            --accent2: #A03D52;
-            --text: #333333;
-            --muted: #666666;
-            --border: rgba(139,46,59,.2);
-        }
+  --primary:        #163428;
+  --primary-light:  #2d4b3e;
+  --primary-dim:    #adcebd;
+  --primary-pale:   #c8ead8;
+  --secondary:      #9a452c;
+  --secondary-cont: #ff9476;
+  --bg:             #fdf9f5;
+  --surface:        #f7f3ef;
+  --surface-high:   #ebe7e4;
+  --border:         rgba(22, 52, 40, 0.10);
+  --text:           #1c1b1a;
+  --text-muted:     #5e6360;
+  --text-ghost:     rgba(28, 27, 26, 0.32);
+  
+  --radius-sm:      12px;
+  --radius-md:      18px;
+  --radius-lg:      26px;
+  --radius-full:    9999px;
+  
+  --shadow-card:    0 2px 12px rgba(22, 52, 40, 0.06), 0 0 0 1px rgba(22, 52, 40, 0.04);
+  --shadow-hover:   0 8px 32px rgba(22, 52, 40, 0.12), 0 0 0 1px rgba(22, 52, 40, 0.06);
+}
+
+/* --- Bouton Principal (CTA Plein) --- */
+.btn-primary, button.primary, a.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(22, 52, 40, 0.25);
+  transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.2s ease, opacity 0.15s;
+}
+.btn-primary:active, button.primary:active, a.cta-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(22, 52, 40, 0.15);
+}
+
+/* --- Bouton Secondaire / Outline & Surface --- */
+.btn-secondary, button.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--primary);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.btn-secondary:active, button.secondary:active {
+  opacity: 0.75;
+}
+
+/* --- Cartes --- */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* --- Liens d'action --- */
+.card-action, .link-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--secondary);
+  text-decoration: none;
+}
+
+body { font-family: 'Manrope', sans-serif !important; background: var(--bg) !important; color: var(--text) !important; }
+h1, h2, h3, h4, h5, h6, .card-title, .title { font-family: 'EB Garamond', Georgia, serif !important; letter-spacing: -0.02em; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Manrope', sans-serif;
             background: var(--bg);
             color: var(--text);
             overflow-x: hidden;
@@ -59,7 +167,10 @@
         /* Nav inactive items */
         a.text-slate-400 { color: var(--muted) !important; }
     </style>
-</head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">\n</head>
 
 <body class="bg-background-dark text-slate-100 min-h-screen flex flex-col">
 
